@@ -1,3 +1,30 @@
+# 🎞️ Photobooth Web App
+
+## Tech Stack
+- Next.js (Fullstack)
+- Supabase (Database & Auth)
+- Cloudflare R2 (Storage)
+- Docker + Nginx (Infra)
+
+## Cara Menjalankan Lokal
+
+### Tanpa Docker
+`npm install`
+`npm run dev`
+
+### Dengan Docker
+`docker-compose up --build`
+
+## Git Workflow
+- JANGAN push langsung ke `main` atau `dev`.
+- Buat branch dari dev: `git checkout -b feat/nama-fitur`
+- Setelah selesai, buat Pull Request ke `dev`.
+- Format commit: `feat:` (fitur baru), `fix:` (bug), `infra:` (server), `docs:` (dokumen).
+
+## Environment Variables
+Salin `.env.example` menjadi `.env.local` lalu isi nilainya dengan kredensial proyek kita.
+
+<!-- Bawaan Next -->
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
