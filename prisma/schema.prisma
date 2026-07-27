@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Photo {
+  id        String   @id @default(cuid())
+  sessionId String
+  imageUrl  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+}
+
+model Session {
+  id         String        @id @default(cuid())
+  userId     String
+  templateId String?
+  status     SessionStatus @default(CREATED)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  photos     Photo[]
+  template   Template?     @relation(fields: [templateId], references: [id])
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([templateId])
+}
+
+model Template {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  thumbnail   String?
+  fileUrl     String
+  isPublic    Boolean   @default(false)
+  creatorId   String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  sessions    Session[]
+  creator     User      @relation("UserTemplates", fields: [creatorId], references: [id], onDelete: Cascade)
+
+  @@index([creatorId])
+}
+
+model User {
+  id                  String               @id @default(cuid())
+  username            String               @unique
+  name                String
+  email               String               @unique
+  password            String?
+  provider            Provider             @default(LOCAL)
+  avatar              String?
+  role                Role                 @default(USER)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  passwordResetTokens PasswordResetToken[]
+  sessions            Session[]
+  templates           Template[]           @relation("UserTemplates")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+enum Provider {
+  LOCAL
+  GOOGLE
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum SessionStatus {
+  CREATED
+  COUNTDOWN
+  CAPTURING
+  GENERATING
+  FINISHED
+}
