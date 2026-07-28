@@ -84,7 +84,7 @@ function Navbar() {
   return (
     <>
       <nav className="fixed top-0 left-0 z-50 w-full border-b border-gray-200 bg-white text-gray-700 shadow-sm">
-        <div className="relative mx-auto flex h-16 md:h-20 items-center justify-between px-6 sm:px-10 lg:px-16 max-w-[1800px]">
+        <div className="relative mx-auto flex h-16 md:h-16 2xl:h-20 items-center justify-between px-6 sm:px-10 lg:px-16 max-w-[1800px]">
           
           {/* Logo */}
           <Link href="/" className="flex items-center justify-start gap-1.5 md:gap-2 font-semibold text-base sm:text-lg md:text-xl text-slate-800 shrink-0 z-10">
