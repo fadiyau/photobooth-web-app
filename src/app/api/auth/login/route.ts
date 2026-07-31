@@ -8,12 +8,22 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
+<<<<<<< HEAD
+    // =========================
+    // VALIDASI INPUT
+    // =========================
+=======
+>>>>>>> dev
     const parsed = loginSchema.safeParse(body);
 
     if (!parsed.success) {
       return NextResponse.json(
         {
           message: "Input tidak valid",
+<<<<<<< HEAD
+          errors: parsed.error.flatten(),
+=======
+>>>>>>> dev
         },
         { status: 400 }
       );
@@ -21,6 +31,12 @@ export async function POST(req: Request) {
 
     const { email, password } = parsed.data;
 
+<<<<<<< HEAD
+    // =========================
+    // CARI USER
+    // =========================
+=======
+>>>>>>> dev
     const user = await prisma.user.findUnique({
       where: {
         email,
@@ -36,6 +52,12 @@ export async function POST(req: Request) {
       );
     }
 
+<<<<<<< HEAD
+    // =========================
+    // GOOGLE USER
+    // =========================
+=======
+>>>>>>> dev
     if (!user.password) {
       return NextResponse.json(
         {
@@ -45,6 +67,25 @@ export async function POST(req: Request) {
       );
     }
 
+<<<<<<< HEAD
+    // =========================
+    // CEK EMAIL VERIFIED
+    // =========================
+    if (!user.emailVerified) {
+      return NextResponse.json(
+        {
+          message: "Email belum diverifikasi",
+          emailVerified: false,
+        },
+        { status: 403 }
+      );
+    }
+
+    // =========================
+    // CEK PASSWORD
+    // =========================
+=======
+>>>>>>> dev
     const valid = await comparePassword(
       password,
       user.password
@@ -59,12 +100,24 @@ export async function POST(req: Request) {
       );
     }
 
+<<<<<<< HEAD
+    // =========================
+    // BUAT JWT
+    // =========================
+=======
+>>>>>>> dev
     const token = signToken({
       id: user.id,
       email: user.email,
       role: user.role,
     });
 
+<<<<<<< HEAD
+    // =========================
+    // RESPONSE
+    // =========================
+=======
+>>>>>>> dev
     const response = NextResponse.json({
       message: "Login berhasil",
       user: {
@@ -73,9 +126,19 @@ export async function POST(req: Request) {
         name: user.name,
         email: user.email,
         role: user.role,
+<<<<<<< HEAD
+        emailVerified: user.emailVerified,
       },
     });
 
+    // =========================
+    // SET COOKIE
+    // =========================
+=======
+      },
+    });
+
+>>>>>>> dev
     response.cookies.set("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -85,8 +148,13 @@ export async function POST(req: Request) {
     });
 
     return response;
+<<<<<<< HEAD
+  } catch (error) {
+    console.error("LOGIN ERROR:", error);
+=======
   } catch (err) {
     console.error(err);
+>>>>>>> dev
 
     return NextResponse.json(
       {
