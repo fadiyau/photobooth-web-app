@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState({
@@ -17,6 +18,7 @@ export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const router = useRouter();
 
@@ -29,28 +31,58 @@ export default function SignUpPage() {
     if (errorMessage) setErrorMessage('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validasi Panjang Password
+    // 1. Validasi Panjang Password
     if (formData.password.length < 8) {
       setErrorMessage('Password minimal harus 8 karakter.');
       return;
     }
 
-    // Validasi Kesesuaian Password
+    // 2. Validasi Kesesuaian Password
     if (formData.password !== formData.confirmPassword) {
       setErrorMessage('Password dan Confirm Password tidak cocok.');
       return;
     }
 
-    console.log("Mencoba Sign Up dengan data:", formData);
-    alert("Pendaftaran Berhasil! (Simulasi)");
-    router.push('/login');
+    setLoading(true);
+    setErrorMessage('');
+
+    try {
+      // 3. Kirim data ke API Route Backend
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || 'Terjadi kesalahan saat pendaftaran.');
+      }
+
+      // 4. Jika Berhasil
+      alert("Pendaftaran Berhasil!");
+      router.push('/login');
+
+    } catch (err) {
+      setErrorMessage(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="w-full min-h-screen bg-white flex flex-col justify-center p-6 md:p-12">
+    <div className="w-full min-h-screen bg-white flex flex-col justify-center p-6 md:p-12 font-sans">
       
       {/* KONTEN UTAMA */}
       <div className="w-full max-w-4xl mx-auto flex flex-col gap-6">
@@ -62,19 +94,7 @@ export default function SignUpPage() {
             className="inline-flex items-center justify-center p-2 -ml-2 rounded-full text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer group"
             aria-label="Go to Home"
           >
-            <svg 
-              className="w-6 h-6 text-gray-800 group-hover:-translate-x-1 transition-transform" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth="2" 
-                d="M10 19l-7-7m0 0l7-7m-7 7h18" 
-              />
-            </svg>
+            <ArrowLeft className="w-6 h-6 text-gray-800 group-hover:-translate-x-1 transition-transform" />
           </button>
         </div>
 
@@ -109,7 +129,7 @@ export default function SignUpPage() {
 
             <form onSubmit={handleSubmit} className="space-y-3.5">
               
-              {/* INPUT NAME (FULL WIDTH) */}
+              {/* INPUT NAME */}
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                   Name
@@ -117,7 +137,7 @@ export default function SignUpPage() {
                 <input
                   type="text"
                   name="name"
-                  placeholder="Placeholder"
+                  placeholder="Nama Lengkap"
                   value={formData.name}
                   onChange={handleChange}
                   className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg bg-gray-50/50 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all placeholder:text-gray-400 text-gray-900"
@@ -133,7 +153,7 @@ export default function SignUpPage() {
                 <input
                   type="text"
                   name="username"
-                  placeholder="Placeholder"
+                  placeholder="Username"
                   value={formData.username}
                   onChange={handleChange}
                   className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg bg-gray-50/50 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all placeholder:text-gray-400 text-gray-900"
@@ -149,7 +169,7 @@ export default function SignUpPage() {
                 <input
                   type="email"
                   name="email"
-                  placeholder="Placeholder"
+                  placeholder="email@example.com"
                   value={formData.email}
                   onChange={handleChange}
                   className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg bg-gray-50/50 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all placeholder:text-gray-400 text-gray-900"
@@ -169,7 +189,7 @@ export default function SignUpPage() {
                     <input
                       type={showPassword ? 'text' : 'password'}
                       name="password"
-                      placeholder="Placeholder"
+                      placeholder="••••••••"
                       minLength={8}
                       value={formData.password}
                       onChange={handleChange}
@@ -181,16 +201,7 @@ export default function SignUpPage() {
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer p-1"
                     >
-                      {showPassword ? (
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
-                        </svg>
-                      ) : (
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                      )}
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
                 </div>
@@ -204,7 +215,7 @@ export default function SignUpPage() {
                     <input
                       type={showConfirmPassword ? 'text' : 'password'}
                       name="confirmPassword"
-                      placeholder="Placeholder"
+                      placeholder="••••••••"
                       minLength={8}
                       value={formData.confirmPassword}
                       onChange={handleChange}
@@ -216,16 +227,7 @@ export default function SignUpPage() {
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer p-1"
                     >
-                      {showConfirmPassword ? (
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
-                        </svg>
-                      ) : (
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                      )}
+                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
                 </div>
@@ -249,9 +251,10 @@ export default function SignUpPage() {
               {/* SUBMIT BUTTON */}
               <button
                 type="submit"
-                className="w-full bg-blue-600 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-blue-700 transition-all shadow-sm mt-2 cursor-pointer text-xs"
+                disabled={loading}
+                className="w-full bg-blue-600 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-blue-700 transition-all shadow-sm mt-2 cursor-pointer text-xs disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Sign Up
+                {loading ? 'Processing...' : 'Sign Up'}
               </button>
 
               {/* LOG IN LINK */}
