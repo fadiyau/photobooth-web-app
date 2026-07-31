@@ -1,13 +1,4 @@
 import { NextResponse } from "next/server";
-<<<<<<< HEAD
-import { getCurrentUser } from "@/lib/auth";
-
-export async function GET() {
-  try {
-    const user = await getCurrentUser();
-
-    if (!user) {
-=======
 import { cookies } from "next/headers";
 
 import { prisma } from "@/lib/prisma";
@@ -20,7 +11,6 @@ export async function GET() {
     const token = cookieStore.get("token")?.value;
 
     if (!token) {
->>>>>>> dev
       return NextResponse.json(
         {
           message: "Unauthorized",
@@ -31,27 +21,6 @@ export async function GET() {
       );
     }
 
-<<<<<<< HEAD
-    return NextResponse.json(
-      {
-        user,
-      },
-      {
-        status: 200,
-      }
-    );
-  } catch (error) {
-    console.error("ME API ERROR:", error);
-
-    return NextResponse.json(
-      {
-        message: "Internal Server Error",
-      },
-      {
-        status: 500,
-      }
-    );
-=======
     const payload = verifyToken(token) as {
       id: string;
       email: string;
@@ -97,6 +66,5 @@ export async function GET() {
       }
     );
 
->>>>>>> dev
   }
 }

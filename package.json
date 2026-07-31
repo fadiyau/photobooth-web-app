@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@prisma/client": "^6.16.3",
     "@supabase/supabase-js": "^2.110.8",
     "bcrypt": "^6.0.0",
     "jsonwebtoken": "^9.0.3",
