@@ -1,12 +1,22 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { forgotPasswordSchema } from "@/lib/validation";
+<<<<<<< HEAD
+import { sendResetPasswordEmail } from "@/lib/email";
+=======
+>>>>>>> dev
 import crypto from "crypto";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
 
+<<<<<<< HEAD
+    // =========================
+    // VALIDASI INPUT
+    // =========================
+=======
+>>>>>>> dev
     const parsed = forgotPasswordSchema.safeParse(body);
 
     if (!parsed.success) {
@@ -21,11 +31,114 @@ export async function POST(req: Request) {
 
     const { email } = parsed.data;
 
+<<<<<<< HEAD
+    // =========================
+    // CARI USER
+    // =========================
+=======
+>>>>>>> dev
     const user = await prisma.user.findUnique({
       where: {
         email,
       },
     });
+<<<<<<< HEAD
+
+    /*
+     * Jangan memberi tahu apakah email
+     * terdaftar atau tidak.
+     *
+     * Ini mencegah email enumeration.
+     */
+    if (!user) {
+      return NextResponse.json(
+        {
+          message:
+            "Jika email terdaftar, link reset password telah dikirim.",
+        },
+        { status: 200 }
+      );
+    }
+
+    // =========================
+    // HAPUS TOKEN LAMA
+    // =========================
+    await prisma.passwordResetToken.deleteMany({
+      where: {
+        userId: user.id,
+      },
+    });
+
+    // =========================
+    // GENERATE TOKEN BARU
+    // =========================
+    const resetToken = crypto
+      .randomBytes(32)
+      .toString("hex");
+
+    // =========================
+    // SIMPAN TOKEN
+    // =========================
+    await prisma.passwordResetToken.create({
+      data: {
+        token: resetToken,
+        userId: user.id,
+        expiresAt: new Date(
+          Date.now() + 1000 * 60 * 15
+        ),
+      },
+    });
+
+    // =========================
+    // KIRIM EMAIL
+    // =========================
+    try {
+      await sendResetPasswordEmail(
+        user.email,
+        user.name,
+        resetToken
+      );
+    } catch (emailError) {
+      console.error(
+        "Gagal mengirim reset password email:",
+        emailError
+      );
+
+      /*
+       * Hapus token jika email gagal dikirim.
+       * Supaya tidak ada token yang tersimpan
+       * tetapi user tidak pernah menerimanya.
+       */
+      await prisma.passwordResetToken.deleteMany({
+        where: {
+          userId: user.id,
+        },
+      });
+
+      return NextResponse.json(
+        {
+          message: "Gagal mengirim email reset password",
+        },
+        { status: 500 }
+      );
+    }
+
+    // =========================
+    // RESPONSE
+    // =========================
+    return NextResponse.json(
+      {
+        message:
+          "Jika email terdaftar, link reset password telah dikirim.",
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error(
+      "FORGOT PASSWORD ERROR:",
+      error
+    );
+=======
     console.log("User ditemukan:", user);
     console.log("Email:", email);
 
@@ -75,14 +188,19 @@ export async function POST(req: Request) {
 }
   catch (error) {
     console.error(error);
+>>>>>>> dev
 
     return NextResponse.json(
       {
         message: "Internal Server Error",
       },
+<<<<<<< HEAD
+      { status: 500 }
+=======
       {
         status: 500,
       }
+>>>>>>> dev
     );
   }
 }

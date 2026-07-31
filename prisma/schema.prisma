@@ -58,13 +58,38 @@ model User {
   provider            Provider             @default(LOCAL)
   avatar              String?
   role                Role                 @default(USER)
+<<<<<<< HEAD
+  emailVerified       Boolean              @default(false)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  passwordResetTokens PasswordResetToken[]
+  emailVerificationOtp EmailVerificationOtp?
+
+=======
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
   passwordResetTokens PasswordResetToken[]
+>>>>>>> dev
   sessions            Session[]
   templates           Template[]           @relation("UserTemplates")
 }
 
+<<<<<<< HEAD
+model EmailVerificationOtp {
+  id        String   @id @default(cuid())
+  code      String
+  userId    String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([code])
+}
+
+=======
+>>>>>>> dev
 model PasswordResetToken {
   id        String   @id @default(cuid())
   token     String   @unique
