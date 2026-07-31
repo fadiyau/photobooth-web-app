@@ -6,6 +6,7 @@ export async function POST() {
         message: "Logout berhasil",
     });
 
+<<<<<<< HEAD
      // Pastikan atribut disesuaikan dengan opsi cookie saat login
   response.cookies.set("token", "", {
     httpOnly: true,
@@ -16,4 +17,12 @@ export async function POST() {
   });
 
   return response;
+=======
+    response.cookies.set("token", "", {
+        expires: new Date(0),
+        path: "/",
+    });
+
+    return response;
+>>>>>>> dev
 }

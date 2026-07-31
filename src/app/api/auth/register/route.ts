@@ -2,18 +2,27 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/bcrypt";
 import { registerSchema } from "@/lib/validation";
+<<<<<<< HEAD
 import {
   sendWelcomeEmail,
   sendOtpVerificationEmail,
 } from "@/lib/email";
+=======
+>>>>>>> dev
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
 
+<<<<<<< HEAD
     // =========================
     // VALIDASI INPUT
     // =========================
+=======
+    console.log(body);
+
+    // Validasi input
+>>>>>>> dev
     const parsed = registerSchema.safeParse(body);
 
     if (!parsed.success) {
@@ -26,6 +35,7 @@ export async function POST(req: Request) {
       );
     }
 
+<<<<<<< HEAD
     const {
       username,
       name,
@@ -42,6 +52,16 @@ export async function POST(req: Request) {
           username,
         },
       });
+=======
+    const { username, name, email, password } = parsed.data;
+
+    // Cek username
+    const usernameExist = await prisma.user.findUnique({
+      where: {
+        username,
+      },
+    });
+>>>>>>> dev
 
     if (usernameExist) {
       return NextResponse.json(
@@ -52,6 +72,7 @@ export async function POST(req: Request) {
       );
     }
 
+<<<<<<< HEAD
     // =========================
     // CEK EMAIL
     // =========================
@@ -61,6 +82,14 @@ export async function POST(req: Request) {
           email,
         },
       });
+=======
+    // Cek email
+    const emailExist = await prisma.user.findUnique({
+      where: {
+        email,
+      },
+    });
+>>>>>>> dev
 
     if (emailExist) {
       return NextResponse.json(
@@ -71,6 +100,7 @@ export async function POST(req: Request) {
       );
     }
 
+<<<<<<< HEAD
     // =========================
     // HASH PASSWORD
     // =========================
@@ -82,13 +112,26 @@ export async function POST(req: Request) {
     // =========================
     const user = await prisma.user.create({
       data: {
+=======
+    // Hash password
+    const hashedPassword = await hashPassword(password);
+
+    // Simpan user
+    const user = await prisma.user.create({
+    data: {
+>>>>>>> dev
         username,
         name,
         email,
         password: hashedPassword,
+<<<<<<< HEAD
         emailVerified: false,
       },
       select: {
+=======
+  },
+    select: {
+>>>>>>> dev
         id: true,
         username: true,
         name: true,
@@ -96,6 +139,7 @@ export async function POST(req: Request) {
         provider: true,
         avatar: true,
         role: true,
+<<<<<<< HEAD
         emailVerified: true,
         createdAt: true,
       },
@@ -162,22 +206,40 @@ export async function POST(req: Request) {
         user,
         emailVerified: false,
         requiresVerification: true,
+=======
+        createdAt: true,
+  },
+});
+
+    return NextResponse.json(
+      {
+        message: "Register berhasil",
+        user,
+>>>>>>> dev
       },
       { status: 201 }
     );
   } catch (error) {
+<<<<<<< HEAD
     console.error(
       "REGISTER ERROR:",
       error
     );
+=======
+    console.error(error);
+>>>>>>> dev
 
     return NextResponse.json(
       {
         message: "Internal Server Error",
       },
+<<<<<<< HEAD
       {
         status: 500,
       }
+=======
+      { status: 500 }
+>>>>>>> dev
     );
   }
 }
