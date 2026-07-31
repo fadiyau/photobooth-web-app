@@ -7,6 +7,9 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
+    // =========================
+    // VALIDASI INPUT
+    // =========================
     const parsed = resetPasswordSchema.safeParse(body);
 
     if (!parsed.success) {
@@ -21,36 +24,53 @@ export async function POST(req: Request) {
 
     const { token, password } = parsed.data;
 
-    const resetToken = await prisma.passwordResetToken.findUnique({
-      where: {
-        token,
-      },
-    });
+    // =========================
+    // CARI TOKEN
+    // =========================
+    const resetToken =
+      await prisma.passwordResetToken.findUnique({
+        where: {
+          token,
+        },
+      });
 
     if (!resetToken) {
       return NextResponse.json(
         {
           message: "Token tidak valid",
         },
-        {
-          status: 400,
-        }
+        { status: 400 }
       );
     }
 
+    // =========================
+    // CEK EXPIRY
+    // =========================
     if (resetToken.expiresAt < new Date()) {
+      // Hapus token expired
+      await prisma.passwordResetToken.delete({
+        where: {
+          id: resetToken.id,
+        },
+      });
+
       return NextResponse.json(
         {
           message: "Token sudah kadaluarsa",
         },
-        {
-          status: 400,
-        }
+        { status: 400 }
       );
     }
 
-    const hashedPassword = await hashPassword(password);
+    // =========================
+    // HASH PASSWORD BARU
+    // =========================
+    const hashedPassword =
+      await hashPassword(password);
 
+    // =========================
+    // UPDATE PASSWORD
+    // =========================
     await prisma.user.update({
       where: {
         id: resetToken.userId,
@@ -60,26 +80,32 @@ export async function POST(req: Request) {
       },
     });
 
+    // =========================
+    // HAPUS TOKEN
+    // =========================
     await prisma.passwordResetToken.delete({
       where: {
         id: resetToken.id,
       },
     });
 
-    return NextResponse.json({
-      message: "Password berhasil diubah",
-    });
-
+    return NextResponse.json(
+      {
+        message: "Password berhasil diubah",
+      },
+      { status: 200 }
+    );
   } catch (error) {
-    console.error(error);
+    console.error(
+      "RESET PASSWORD ERROR:",
+      error
+    );
 
     return NextResponse.json(
       {
         message: "Internal Server Error",
       },
-      {
-        status: 500,
-      }
+      { status: 500 }
     );
   }
 }

@@ -1,16 +1,11 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-
-import { prisma } from "@/lib/prisma";
-import { verifyToken } from "@/lib/jwt";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function GET() {
   try {
-    const cookieStore = await cookies();
+    const user = await getCurrentUser();
 
-    const token = cookieStore.get("token")?.value;
-
-    if (!token) {
+    if (!user) {
       return NextResponse.json(
         {
           message: "Unauthorized",
@@ -21,50 +16,24 @@ export async function GET() {
       );
     }
 
-    const payload = verifyToken(token) as {
-      id: string;
-      email: string;
-      role: string;
-    };
-
-    const user = await prisma.user.findUnique({
-      where: {
-        id: payload.id,
+    return NextResponse.json(
+      {
+        user,
       },
-      select: {
-        id: true,
-        username: true,
-        name: true,
-        email: true,
-        avatar: true,
-        role: true,
-        provider: true,
-      },
-    });
-
-    if (!user) {
-      return NextResponse.json(
-        {
-          message: "User tidak ditemukan",
-        },
-        {
-          status: 404,
-        }
-      );
-    }
-
-    return NextResponse.json(user);
-
-  } catch (err) {
+      {
+        status: 200,
+      }
+    );
+  } catch (error) {
+    console.error("ME API ERROR:", error);
 
     return NextResponse.json(
       {
-        message: "Unauthorized",
+        message: "Internal Server Error",
       },
       {
-        status: 401,
+        status: 500,
       }
     );
-
   }
 }

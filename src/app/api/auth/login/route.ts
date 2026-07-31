@@ -8,12 +8,16 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
+    // =========================
+    // VALIDASI INPUT
+    // =========================
     const parsed = loginSchema.safeParse(body);
 
     if (!parsed.success) {
       return NextResponse.json(
         {
           message: "Input tidak valid",
+          errors: parsed.error.flatten(),
         },
         { status: 400 }
       );
@@ -21,6 +25,9 @@ export async function POST(req: Request) {
 
     const { email, password } = parsed.data;
 
+    // =========================
+    // CARI USER
+    // =========================
     const user = await prisma.user.findUnique({
       where: {
         email,
@@ -36,6 +43,9 @@ export async function POST(req: Request) {
       );
     }
 
+    // =========================
+    // GOOGLE USER
+    // =========================
     if (!user.password) {
       return NextResponse.json(
         {
@@ -45,6 +55,22 @@ export async function POST(req: Request) {
       );
     }
 
+    // =========================
+    // CEK EMAIL VERIFIED
+    // =========================
+    if (!user.emailVerified) {
+      return NextResponse.json(
+        {
+          message: "Email belum diverifikasi",
+          emailVerified: false,
+        },
+        { status: 403 }
+      );
+    }
+
+    // =========================
+    // CEK PASSWORD
+    // =========================
     const valid = await comparePassword(
       password,
       user.password
@@ -59,12 +85,18 @@ export async function POST(req: Request) {
       );
     }
 
+    // =========================
+    // BUAT JWT
+    // =========================
     const token = signToken({
       id: user.id,
       email: user.email,
       role: user.role,
     });
 
+    // =========================
+    // RESPONSE
+    // =========================
     const response = NextResponse.json({
       message: "Login berhasil",
       user: {
@@ -73,9 +105,13 @@ export async function POST(req: Request) {
         name: user.name,
         email: user.email,
         role: user.role,
+        emailVerified: user.emailVerified,
       },
     });
 
+    // =========================
+    // SET COOKIE
+    // =========================
     response.cookies.set("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -85,8 +121,8 @@ export async function POST(req: Request) {
     });
 
     return response;
-  } catch (err) {
-    console.error(err);
+  } catch (error) {
+    console.error("LOGIN ERROR:", error);
 
     return NextResponse.json(
       {

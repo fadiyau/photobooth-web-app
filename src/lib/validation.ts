@@ -20,3 +20,8 @@ export const resetPasswordSchema = z.object({
   token: z.string(),
   password: z.string().min(8),
 });
+
+export const verifyOtpSchema = z.object({
+  email: z.email(),
+  otp: z.string().length(4),
+});
