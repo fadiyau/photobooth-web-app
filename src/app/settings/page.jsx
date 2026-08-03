@@ -1,44 +1,109 @@
 'use client';
 
-import React, { useState } from 'react';
-import Navbar from '@/components/Navbar'; 
-import Footer from '@/components/Footer'; 
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function SettingsPage() {
+  const router = useRouter();
+  
   const [profileData, setProfileData] = useState({
-    name: 'Name Name Name',
-    username: 'username',
-    email: 'username@gmail.com'
+    name: '',
+    username: '',
+    email: ''
   });
 
-  const [isSaved, setIsSaved] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '' });
 
+  // 1. FETCH DATA USER SAAT HALAMAN DIMUAT
+  useEffect(() => {
+  async function fetchUserProfile() {
+    try {
+      const res = await fetch('/api/auth/me');
+      const data = await res.json();
+
+      // Cek res.ok dan pastikan data.id atau data.email ada (karena data tidak dibungkus 'user')
+      if (res.ok && data?.id) {
+        setProfileData({
+          name: data.name || '',
+          username: data.username || '',
+          email: data.email || ''
+        });
+      } else {
+        router.push('/login');
+      }
+    } catch (error) {
+      console.error('Failed to fetch user:', error);
+      router.push('/login');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  fetchUserProfile();
+}, [router]);
+
+  // 2. HANDLE INPUT CHANGE
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setItemData(prev => ({ ...prev, [name]: value })); // atau setProfileData
     setProfileData(prev => ({
       ...prev,
       [name]: value
     }));
   };
 
-  const handleSubmit = (e) => {
+  // 3. SUBMIT PERUBAHAN KE API UPDATE PROFILE
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Updated Profile Data:", profileData);
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 3000);
+    setIsSubmitting(true);
+    setMessage({ type: '', text: '' });
+
+    try {
+      const res = await fetch('/api/users/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: profileData.name,
+          username: profileData.username,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || 'Gagal memperbarui profil');
+      }
+
+      setMessage({ type: 'success', text: 'Profile updated successfully!' });
+      
+      // Refresh router agar komponen lain (misal Navbar) ikut ter-update
+      router.refresh();
+
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    } catch (error) {
+      setMessage({ type: 'error', text: error.message });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <p className="text-sm text-gray-500 font-medium">Memuat data profil...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
       
-      {/* NAVBAR KOMPONEN */}
-      <Navbar />
-
-      {/* MAIN CONTENT DENGAN POLA LEBAR RESPONSIF SEPERTI HALAMAN LAIN */}
+      {/* MAIN CONTENT */}
       <main className="flex-1 max-w-[1800px] w-full mx-auto px-6 sm:px-12 lg:px-38 pt-24 md:pt-28 pb-12 sm:pb-16">
         
-        {/* CONTAINER KONTEN AGAR BERADA DI TENGAH DAN PROPORSIONAL */}
         <div className="max-w-5xl mx-auto">
 
           {/* PAGE TITLE */}
@@ -52,9 +117,13 @@ export default function SettingsPage() {
           </div>
 
           {/* NOTIFICATION TOAST */}
-          {isSaved && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg">
-              Profile updated successfully!
+          {message.text && (
+            <div className={`mb-6 p-4 border text-sm rounded-lg ${
+              message.type === 'success' 
+                ? 'bg-green-50 border-green-200 text-green-700' 
+                : 'bg-red-50 border-red-200 text-red-700'
+            }`}>
+              {message.text}
             </div>
           )}
 
@@ -69,13 +138,13 @@ export default function SettingsPage() {
               </div>
               
               <div className="p-8 flex flex-col items-center text-center">
-                {/* AVATAR PLACEHOLDER */}
-               <div className="w-28 h-28 rounded-full bg-slate-300/80 flex items-center justify-center text-slate-600 mb-4 overflow-hidden relative">
-                <svg className="w-20 h-20 translate-y-2 text-slate-700" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                </svg>
-              </div>
-
+                
+                {/* AVATAR INISIAL DARI USERNAME */}
+                <div className="w-24 h-24 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 font-semibold text-2xl tracking-wider mb-4">
+                  {profileData.username 
+                    ? profileData.username.substring(0, 2).toUpperCase()
+                    : 'U'}
+                </div>
 
                 {/* USER INFORMATION DISPLAY */}
                 <h3 className="font-bold text-gray-900 text-base">
@@ -109,7 +178,8 @@ export default function SettingsPage() {
                     name="name"
                     value={profileData.name}
                     onChange={handleChange}
-                    placeholder="Name Name Name"
+                    placeholder="Enter your name"
+                    required
                     className="w-full px-3.5 py-2 border border-gray-300 rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                   />
                 </div>
@@ -124,12 +194,13 @@ export default function SettingsPage() {
                     name="username"
                     value={profileData.username}
                     onChange={handleChange}
-                    placeholder="username"
+                    placeholder="Enter your username"
+                    required
                     className="w-full px-3.5 py-2 border border-gray-300 rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
                   />
                 </div>
 
-                {/* EMAIL INPUT (READ ONLY / DISABLED) */}
+                {/* EMAIL INPUT */}
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                     Email
@@ -151,12 +222,13 @@ export default function SettingsPage() {
                 <div className="pt-4 border-t border-gray-100">
                   <button
                     type="submit"
-                    className="inline-flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600 rounded-md font-semibold text-xs hover:bg-blue-50 transition-colors cursor-pointer"
+                    disabled={isSubmitting}
+                    className="inline-flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600 rounded-md font-semibold text-xs hover:bg-blue-50 transition-colors cursor-pointer disabled:opacity-50"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                     </svg>
-                    Save Changes
+                    {isSubmitting ? 'Saving...' : 'Save Changes'}
                   </button>
                 </div>
 
@@ -166,9 +238,6 @@ export default function SettingsPage() {
           </div>
         </div>
       </main>
-
-      {/* FOOTER KOMPONEN */}
-      <Footer />
 
     </div>
   );

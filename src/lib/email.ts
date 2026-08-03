@@ -133,8 +133,7 @@ export async function sendResetPasswordEmail(
   token: string
 ) {
   try {
-    const resetLink = `${process.env.APP_URL}/reset-password?token=${token}`;
-
+    const resetLink = `${process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || "http://localhost:3000"}/reset-password?token=${token}`;
     await brevo.transactionalEmails.sendTransacEmail({
       sender: {
         name: "Photobooth",

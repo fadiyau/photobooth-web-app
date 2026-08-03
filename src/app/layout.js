@@ -1,8 +1,8 @@
 import "./globals.css";
-import Navbar from "@/components/Navbar";
+import NavbarWrapper from "@/components/NavbarWrapper"; // <--- Import Wrapper baru
 import { cookies } from "next/headers";
-import { verifyToken } from "@/lib/jwt"; // <--- Import fungsi verify JWT kamu
-import { prisma } from "@/lib/prisma";   // <--- Import prisma jika butuh data user lengkap
+import { verifyToken } from "@/lib/jwt";
+import { prisma } from "@/lib/prisma";
 
 export const metadata = {
   title: "OnlinePhotobooth",
@@ -18,14 +18,12 @@ async function getAuthStatus() {
       return { isLoggedIn: false, user: null };
     }
 
-    // 1. Verifikasi JWT langsung di Server
     const decoded = verifyToken(token); 
 
     if (!decoded) {
       return { isLoggedIn: false, user: null };
     }
 
-    // 2. Ambil data user segar dari database via Prisma
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
       select: {
@@ -57,7 +55,8 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className="antialiased">
-        <Navbar user={user} isLoggedIn={isLoggedIn} />
+        {/* Gunakan NavbarWrapper di sini */}
+        <NavbarWrapper user={user} isLoggedIn={isLoggedIn} />
         <main>{children}</main>
       </body>
     </html>

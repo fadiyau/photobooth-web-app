@@ -177,7 +177,7 @@ export default function GalleryPage() {
 
                   <div>
                     <h1 className="text-xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
-                      {user?.name || user?.username || 'Username'}
+                      {user?.username || user?.name || 'Username'}
                     </h1>
                     <p className="text-xs sm:text-base text-gray-600 font-medium mt-0.5">
                       {user?.email || 'username@gmail.com'}

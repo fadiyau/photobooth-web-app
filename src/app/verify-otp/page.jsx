@@ -4,6 +4,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 
+// Import komponen modal
+import SignupSuccessModal from '@/components/SignupSuccessModal';
+
 export default function VerifyOtpPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -13,6 +16,9 @@ export default function VerifyOtpPage() {
   const [canResend, setCanResend] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  // State untuk kontrol Modal Success
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
   const inputRefs = [useRef(null), useRef(null), useRef(null), useRef(null)];
 
@@ -74,7 +80,7 @@ export default function VerifyOtpPage() {
   // Fungsi Verifikasi OTP ke Backend
   const handleVerify = async (codeToVerify) => {
     const code = codeToVerify || otp.join('');
-    if (code.length !== 4) return;
+    if (code.length !== 4 || loading) return;
 
     setLoading(true);
     setErrorMsg('');
@@ -89,8 +95,8 @@ export default function VerifyOtpPage() {
       const data = await res.json();
 
       if (res.ok) {
-        // Jika berhasil verifikasi, redirect ke login atau dashboard
-        router.push('/login?verified=true');
+        // Buka Modal Sukses
+        setIsSuccessModalOpen(true);
       } else {
         setErrorMsg(data.message || 'Kode verifikasi salah atau kedaluwarsa.');
       }
@@ -101,12 +107,11 @@ export default function VerifyOtpPage() {
     }
   };
 
-  // Fungsi Kirim Ulang OTP
+  // Fungsi Kirim Ulang OTP (Updated untuk sinkronisasi Backend)
   const handleResendCode = async () => {
-    if (!canResend) return;
+    if (!canResend || loading) return;
 
-    setCanResend(false);
-    setTimer(60); // Reset timer ke 60 detik
+    setLoading(true);
     setErrorMsg('');
 
     try {
@@ -116,16 +121,34 @@ export default function VerifyOtpPage() {
         body: JSON.stringify({ email }),
       });
 
-      if (!res.ok) {
-        setErrorMsg('Gagal mengirim ulang kode. Coba lagi nanti.');
+      const data = await res.json();
+
+      if (res.ok) {
+        // 1. Reset input OTP ke kondisi awal & kembalikan fokus ke kotak pertama
+        setOtp(['', '', '', '']);
+        inputRefs[0].current?.focus();
+
+        // 2. Reset timer countdown
+        setTimer(60);
+        setCanResend(false);
+      } else {
+        setErrorMsg(data.message || 'Gagal mengirim ulang kode.');
+
+        // Jika backend merespons rate-limit cooldown (HTTP 429), atur timer sesuai sisa detik dari backend
+        if (data.remainingSeconds) {
+          setTimer(data.remainingSeconds);
+          setCanResend(false);
+        }
       }
     } catch (err) {
       setErrorMsg('Gagal terhubung ke server.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#F3F4F6] flex items-center justify-center p-4 font-sans select-none">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans select-none relative">
       <div className="bg-white rounded-2xl p-8 sm:p-12 w-full max-w-lg shadow-sm border border-gray-100 flex flex-col items-center text-center">
         {/* Title */}
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
@@ -169,9 +192,10 @@ export default function VerifyOtpPage() {
             <button
               onClick={handleResendCode}
               type="button"
-              className="text-blue-600 font-semibold hover:underline cursor-pointer focus:outline-none"
+              disabled={loading}
+              className="text-blue-600 font-semibold hover:underline cursor-pointer focus:outline-none disabled:opacity-50"
             >
-              Resend code
+              {loading ? 'Sending...' : 'Resend code'}
             </button>
           ) : (
             <span>
@@ -183,15 +207,25 @@ export default function VerifyOtpPage() {
 
         {/* Back to Login Link */}
         <div className="text-center pt-3">
-            <button
-              type="button"
-              onClick={() => router.push('/login')}
-              className="text-xs font-semibold text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
-            >
-              ← Back to Log In
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => router.push('/login')}
+            className="text-xs font-semibold text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
+          >
+            ← Back to Log In
+          </button>
+        </div>
       </div>
+
+      {/* Modal Sukses */}
+      <SignupSuccessModal
+        isOpen={isSuccessModalOpen}
+        onClose={() => setIsSuccessModalOpen(false)}
+        onLoginClick={() => {
+          setIsSuccessModalOpen(false);
+          router.push('/login');
+        }}
+      />
     </div>
   );
 }

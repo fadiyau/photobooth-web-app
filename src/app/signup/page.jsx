@@ -34,13 +34,11 @@ export default function SignUpPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // 1. Validasi Panjang Password
     if (formData.password.length < 8) {
       setErrorMessage('Password minimal harus 8 karakter.');
       return;
     }
 
-    // 2. Validasi Kesesuaian Password
     if (formData.password !== formData.confirmPassword) {
       setErrorMessage('Password dan Confirm Password tidak cocok.');
       return;
@@ -50,7 +48,6 @@ export default function SignUpPage() {
     setErrorMessage('');
 
     try {
-      // 3. Kirim data ke API Route Backend
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
@@ -70,9 +67,10 @@ export default function SignUpPage() {
         throw new Error(data.message || 'Terjadi kesalahan saat pendaftaran.');
       }
 
-      // 4. Jika Berhasil
-      alert("Pendaftaran Berhasil!");
-      router.push('/login');
+      // =========================================================
+      // DILAKUKAN REDIRECT KE VERIFY OTP HALAMAN
+      // =========================================================
+      router.push(`/verify-otp?email=${encodeURIComponent(formData.email)}`);
 
     } catch (err) {
       setErrorMessage(err.message);
@@ -82,12 +80,10 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-white flex flex-col justify-center p-6 md:p-12 font-sans">
+    <div className="w-full min-h-screen bg-white flex flex-col justify-center p-6 md:p-12 font-sans relative">
       
-      {/* KONTEN UTAMA */}
+      {/* MAIN CONTENT FORM */}
       <div className="w-full max-w-4xl mx-auto flex flex-col gap-6">
-        
-        {/* ================= TOMBOL BACK ================= */}
         <div>
           <button
             onClick={() => router.push('/')}
@@ -98,16 +94,13 @@ export default function SignUpPage() {
           </button>
         </div>
 
-        {/* ================= (Gambar & Form) ================= */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-center">
-          
-          {/* KOLOM KIRI: PLACEHOLDER GAMBAR */}
+          {/* PLACEHOLDER GAMBAR */}
           <div className="w-full aspect-square bg-slate-200/90 rounded-xl flex flex-col items-center justify-center relative overflow-hidden">
             <svg className="absolute inset-0 w-full h-full text-slate-300" viewBox="0 0 100 100" preserveAspectRatio="none">
               <line x1="0" y1="0" x2="100%" y2="100%" stroke="currentColor" strokeWidth="1" />
               <line x1="100%" y1="0" x2="0" y2="100%" stroke="currentColor" strokeWidth="1" />
             </svg>
-            
             <div className="w-1/2 h-1/2 bg-slate-100/80 border-2 border-slate-300/80 rounded-lg flex items-center justify-center z-10">
               <svg className="w-10 h-10 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -115,7 +108,7 @@ export default function SignUpPage() {
             </div>
           </div>
 
-          {/* KOLOM KANAN: FORM SIGN UP */}
+          {/* FORM */}
           <div className="w-full max-w-md mx-auto md:mx-0">
             <h1 className="text-3xl font-extrabold text-gray-900 mb-6 tracking-tight">
               Sign Up
@@ -128,12 +121,8 @@ export default function SignUpPage() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-3.5">
-              
-              {/* INPUT NAME */}
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                  Name
-                </label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Name</label>
                 <input
                   type="text"
                   name="name"
@@ -145,11 +134,8 @@ export default function SignUpPage() {
                 />
               </div>
 
-              {/* INPUT USERNAME */}
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                  Username
-                </label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Username</label>
                 <input
                   type="text"
                   name="username"
@@ -161,11 +147,8 @@ export default function SignUpPage() {
                 />
               </div>
 
-              {/* INPUT EMAIL */}
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                  Email
-                </label>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Email</label>
                 <input
                   type="email"
                   name="email"
@@ -177,14 +160,9 @@ export default function SignUpPage() {
                 />
               </div>
 
-              {/* GRID 2 KOLOM: PASSWORD & CONFIRM PASSWORD */}
               <div className="grid grid-cols-2 gap-3">
-                
-                {/* PASSWORD */}
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                    Password
-                  </label>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">Password</label>
                   <div className="relative">
                     <input
                       type={showPassword ? 'text' : 'password'}
@@ -206,11 +184,8 @@ export default function SignUpPage() {
                   </div>
                 </div>
 
-                {/* CONFIRM PASSWORD */}
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                    Confirm Password
-                  </label>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">Confirm Password</label>
                   <div className="relative">
                     <input
                       type={showConfirmPassword ? 'text' : 'password'}
@@ -231,10 +206,8 @@ export default function SignUpPage() {
                     </button>
                   </div>
                 </div>
-
               </div>
 
-              {/* REMEMBER ME */}
               <div className="pt-0.5">
                 <label className="flex items-center gap-1.5 text-xs font-medium text-gray-700 cursor-pointer select-none">
                   <input
@@ -248,7 +221,6 @@ export default function SignUpPage() {
                 </label>
               </div>
 
-              {/* SUBMIT BUTTON */}
               <button
                 type="submit"
                 disabled={loading}
@@ -257,17 +229,14 @@ export default function SignUpPage() {
                 {loading ? 'Processing...' : 'Sign Up'}
               </button>
 
-              {/* LOG IN LINK */}
               <p className="text-center text-xs font-medium text-gray-600 pt-2">
                 Already have an account?{' '}
                 <Link href="/login" className="text-blue-600 hover:underline font-bold">
                   Log In
                 </Link>
               </p>
-
             </form>
           </div>
-
         </div>
       </div>
 
