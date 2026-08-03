@@ -4,7 +4,7 @@ import { sendOtpVerificationEmail } from "@/lib/email";
 import { z } from "zod";
 
 const resendOtpSchema = z.object({
-  email: z.email("Format email tidak valid"),
+  email: z.string().email("Format email tidak valid"),
 });
 
 const RESEND_COOLDOWN = 60 * 1000; // 60 detik
@@ -63,12 +63,11 @@ export async function POST(req: Request) {
     // =========================
     // CARI OTP TERAKHIR
     // =========================
-    const existingOtp =
-      await prisma.emailVerificationOtp.findUnique({
-        where: {
-          userId: user.id,
-        },
-      });
+    const existingOtp = await prisma.emailVerificationOtp.findUnique({
+      where: {
+        userId: user.id,
+      },
+    });
 
     // =========================
     // CEK COOLDOWN
@@ -97,9 +96,7 @@ export async function POST(req: Request) {
     // =========================
     // GENERATE OTP BARU
     // =========================
-    const otp = Math.floor(
-      1000 + Math.random() * 9000
-    ).toString();
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
 
     // =========================
     // HAPUS OTP LAMA
@@ -119,14 +116,12 @@ export async function POST(req: Request) {
       data: {
         code: otp,
         userId: user.id,
-        expiresAt: new Date(
-          Date.now() + 1000 * 60 * 5
-        ),
+        expiresAt: new Date(Date.now() + 1000 * 60 * 5),
       },
     });
 
     // =========================
-    // KIRIM OTP VIA BREVO
+    // KIRIM OTP VIA EMAIL
     // =========================
     await sendOtpVerificationEmail(
       user.email,

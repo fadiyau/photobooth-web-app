@@ -2,27 +2,18 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/bcrypt";
 import { registerSchema } from "@/lib/validation";
-<<<<<<< HEAD
 import {
   sendWelcomeEmail,
   sendOtpVerificationEmail,
 } from "@/lib/email";
-=======
->>>>>>> dev
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-<<<<<<< HEAD
     // =========================
     // VALIDASI INPUT
     // =========================
-=======
-    console.log(body);
-
-    // Validasi input
->>>>>>> dev
     const parsed = registerSchema.safeParse(body);
 
     if (!parsed.success) {
@@ -35,33 +26,16 @@ export async function POST(req: Request) {
       );
     }
 
-<<<<<<< HEAD
-    const {
-      username,
-      name,
-      email,
-      password,
-    } = parsed.data;
+    const { username, name, email, password } = parsed.data;
 
     // =========================
     // CEK USERNAME
     // =========================
-    const usernameExist =
-      await prisma.user.findUnique({
-        where: {
-          username,
-        },
-      });
-=======
-    const { username, name, email, password } = parsed.data;
-
-    // Cek username
     const usernameExist = await prisma.user.findUnique({
       where: {
         username,
       },
     });
->>>>>>> dev
 
     if (usernameExist) {
       return NextResponse.json(
@@ -72,24 +46,14 @@ export async function POST(req: Request) {
       );
     }
 
-<<<<<<< HEAD
     // =========================
     // CEK EMAIL
     // =========================
-    const emailExist =
-      await prisma.user.findUnique({
-        where: {
-          email,
-        },
-      });
-=======
-    // Cek email
     const emailExist = await prisma.user.findUnique({
       where: {
         email,
       },
     });
->>>>>>> dev
 
     if (emailExist) {
       return NextResponse.json(
@@ -100,38 +64,23 @@ export async function POST(req: Request) {
       );
     }
 
-<<<<<<< HEAD
     // =========================
     // HASH PASSWORD
     // =========================
-    const hashedPassword =
-      await hashPassword(password);
+    const hashedPassword = await hashPassword(password);
 
     // =========================
     // CREATE USER
     // =========================
     const user = await prisma.user.create({
       data: {
-=======
-    // Hash password
-    const hashedPassword = await hashPassword(password);
-
-    // Simpan user
-    const user = await prisma.user.create({
-    data: {
->>>>>>> dev
         username,
         name,
         email,
         password: hashedPassword,
-<<<<<<< HEAD
         emailVerified: false,
       },
       select: {
-=======
-  },
-    select: {
->>>>>>> dev
         id: true,
         username: true,
         name: true,
@@ -139,7 +88,6 @@ export async function POST(req: Request) {
         provider: true,
         avatar: true,
         role: true,
-<<<<<<< HEAD
         emailVerified: true,
         createdAt: true,
       },
@@ -148,9 +96,7 @@ export async function POST(req: Request) {
     // =========================
     // GENERATE OTP
     // =========================
-    const otp = Math.floor(
-      1000 + Math.random() * 9000
-    ).toString();
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
 
     // =========================
     // SIMPAN OTP
@@ -159,9 +105,7 @@ export async function POST(req: Request) {
       data: {
         code: otp,
         userId: user.id,
-        expiresAt: new Date(
-          Date.now() + 1000 * 60 * 5
-        ),
+        expiresAt: new Date(Date.now() + 1000 * 60 * 5),
       },
     });
 
@@ -175,25 +119,16 @@ export async function POST(req: Request) {
         otp
       );
     } catch (emailError) {
-      console.error(
-        "Gagal mengirim OTP:",
-        emailError
-      );
+      console.error("Gagal mengirim OTP:", emailError);
     }
 
     // =========================
     // KIRIM WELCOME EMAIL
     // =========================
     try {
-      await sendWelcomeEmail(
-        user.email,
-        user.name
-      );
+      await sendWelcomeEmail(user.email, user.name);
     } catch (emailError) {
-      console.error(
-        "Gagal mengirim welcome email:",
-        emailError
-      );
+      console.error("Gagal mengirim welcome email:", emailError);
     }
 
     // =========================
@@ -201,45 +136,21 @@ export async function POST(req: Request) {
     // =========================
     return NextResponse.json(
       {
-        message:
-          "Register berhasil. Silakan verifikasi email kamu.",
+        message: "Register berhasil. Silakan verifikasi email kamu.",
         user,
         emailVerified: false,
         requiresVerification: true,
-=======
-        createdAt: true,
-  },
-});
-
-    return NextResponse.json(
-      {
-        message: "Register berhasil",
-        user,
->>>>>>> dev
       },
       { status: 201 }
     );
   } catch (error) {
-<<<<<<< HEAD
-    console.error(
-      "REGISTER ERROR:",
-      error
-    );
-=======
-    console.error(error);
->>>>>>> dev
+    console.error("REGISTER ERROR:", error);
 
     return NextResponse.json(
       {
         message: "Internal Server Error",
       },
-<<<<<<< HEAD
-      {
-        status: 500,
-      }
-=======
       { status: 500 }
->>>>>>> dev
     );
   }
 }

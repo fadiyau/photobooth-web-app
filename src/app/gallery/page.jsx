@@ -1,21 +1,31 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import DownloadModal from '@/components/DownloadModal';
 import DeleteModal from '@/components/DeleteModal';
 import Footer from '@/components/Footer';
 
+// Helper untuk mengambil inisial dari nama atau username
+const getInitials = (name) => {
+  if (!name) return 'U';
+  const parts = name.trim().split(' ');
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
+};
+
 export default function GalleryPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // State untuk melacak kartu yang sedang aktif (khusus interaksi tap di mobile)
+  // State untuk melacak kartu yang sedang aktif
   const [activePhotoId, setActivePhotoId] = useState(null);
 
-  // State Download Modal
+  // State Download & Delete Modal
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
-
-  // State Delete Modal
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
 
@@ -24,18 +34,37 @@ export default function GalleryPage() {
     { id: 2, title: 'Frame 4', date: 'July 13, 2026, 11:11 PM.', imageUrl: '' },
   ]);
 
-  // Toggle overlay khusus mobile (tap/click kartu)
+  // Efek untuk mengecek status login saat komponen pertama kali dirender
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+          const data = await res.json();
+          setIsLoggedIn(true);
+          setUser(data.user || data);
+        } else {
+          setIsLoggedIn(false);
+        }
+      } catch (err) {
+        setIsLoggedIn(false);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    checkAuth();
+  }, []);
+
   const handleCardClick = (id) => {
     setActivePhotoId((prev) => (prev === id ? null : id));
   };
 
-  // Membuka modal konfirmasi hapus
   const handleOpenDelete = (photo) => {
     setSelectedPhoto(photo);
     setIsDeleteModalOpen(true);
   };
 
-  // hapus setelah dikonfirmasi
   const handleConfirmDelete = () => {
     if (selectedPhoto) {
       setPhotos(photos.filter((p) => p.id !== selectedPhoto.id));
@@ -49,21 +78,16 @@ export default function GalleryPage() {
     setIsDownloadModalOpen(true);
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <p className="text-gray-400 font-semibold animate-pulse">Loading gallery...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white flex flex-col justify-between font-sans select-none pt-16 md:pt-20">
-      {/* DEV TOOLBAR BAR */}
-      <div className="bg-slate-800 text-white text-xs py-1.5 px-6 flex justify-between items-center z-50">
-        <span>
-          Dev Mode Status: <strong>{isLoggedIn ? 'Logged In' : 'Logged Out'}</strong>
-        </span>
-        <button
-          onClick={() => setIsLoggedIn(!isLoggedIn)}
-          className="bg-blue-600 hover:bg-blue-500 text-white px-2.5 py-0.5 rounded font-medium cursor-pointer"
-        >
-          Toggle Auth Status
-        </button>
-      </div>
-
       {/* ================= MAIN CONTENT CONTAINER ================= */}
       <main className="w-full max-w-[1800px] mx-auto px-6 sm:px-10 lg:px-38 pt-8 pb-16 flex-1 flex flex-col justify-between">
         {!isLoggedIn ? (
@@ -146,28 +170,36 @@ export default function GalleryPage() {
               {/* Profile Header */}
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 sm:gap-6 pb-10 border-b border-gray-200">
                 <div className="flex items-center gap-4 sm:gap-6">
-                  <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-[#6C757D] flex items-center justify-center text-white overflow-hidden shrink-0">
-                    <svg className="w-14 h-14 sm:w-20 sm:h-20 translate-y-2" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                    </svg>
+                  {/* Lingkaran Inisial Profil sesuai Navbar */}
+                  <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-[#E9ECEF] text-[#6C757D] font-bold text-2xl sm:text-4xl flex items-center justify-center shrink-0 tracking-wider">
+                    {getInitials(user?.name || user?.username)}
                   </div>
 
                   <div>
                     <h1 className="text-xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
-                      Username
+                      {user?.username || user?.name || 'Username'}
                     </h1>
                     <p className="text-xs sm:text-base text-gray-600 font-medium mt-0.5">
-                      username@gmail.com
+                      {user?.email || 'username@gmail.com'}
                     </p>
                     <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 mt-1.5">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 0120 14m-6-6h.01M6 20h12a2 2 0 002-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
+                      <svg 
+                        xmlns="http://w3.org" 
+                        viewBox="0 0 24 24" 
+                        width="24" 
+                        height="24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth="2" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round"
+                      >
+                        <rect x="2.5" y="2.5" width="19" height="19" rx="6" ry="6" />
+                        <circle cx="8" cy="8" r="1.5" />
+                        <path d="M3 18.5 L7.5 14 L12 18.5 L16.5 11.5 L21 16" />
                       </svg>
+
+
                       <span>{photos.length} Photos</span>
                     </div>
                   </div>
@@ -232,7 +264,6 @@ export default function GalleryPage() {
                               : 'opacity-0 sm:group-hover:opacity-100 pointer-events-none sm:group-hover:pointer-events-auto'
                           }`}
                         >
-                          {/* Tombol Download */}
                           <button
                             type="button"
                             onClick={(e) => {
@@ -252,7 +283,6 @@ export default function GalleryPage() {
                             </svg>
                           </button>
 
-                          {/* Tombol Delete */}
                           <button
                             type="button"
                             onClick={(e) => {
@@ -306,14 +336,12 @@ export default function GalleryPage() {
 
       <Footer />
 
-      {/* DOWNLOAD MODAL */}
       <DownloadModal
         isOpen={isDownloadModalOpen}
         onClose={() => setIsDownloadModalOpen(false)}
         selectedPhoto={selectedPhoto}
       />
 
-      {/* DELETE MODAL */}
       <DeleteModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}

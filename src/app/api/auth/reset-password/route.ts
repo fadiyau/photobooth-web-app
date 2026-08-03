@@ -7,12 +7,9 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-<<<<<<< HEAD
     // =========================
     // VALIDASI INPUT
     // =========================
-=======
->>>>>>> dev
     const parsed = resetPasswordSchema.safeParse(body);
 
     if (!parsed.success) {
@@ -27,30 +24,20 @@ export async function POST(req: Request) {
 
     const { token, password } = parsed.data;
 
-<<<<<<< HEAD
     // =========================
     // CARI TOKEN
     // =========================
-    const resetToken =
-      await prisma.passwordResetToken.findUnique({
-        where: {
-          token,
-        },
-      });
-=======
     const resetToken = await prisma.passwordResetToken.findUnique({
       where: {
         token,
       },
     });
->>>>>>> dev
 
     if (!resetToken) {
       return NextResponse.json(
         {
           message: "Token tidak valid",
         },
-<<<<<<< HEAD
         { status: 400 }
       );
     }
@@ -66,20 +53,10 @@ export async function POST(req: Request) {
         },
       });
 
-=======
-        {
-          status: 400,
-        }
-      );
-    }
-
-    if (resetToken.expiresAt < new Date()) {
->>>>>>> dev
       return NextResponse.json(
         {
           message: "Token sudah kadaluarsa",
         },
-<<<<<<< HEAD
         { status: 400 }
       );
     }
@@ -87,22 +64,11 @@ export async function POST(req: Request) {
     // =========================
     // HASH PASSWORD BARU
     // =========================
-    const hashedPassword =
-      await hashPassword(password);
+    const hashedPassword = await hashPassword(password);
 
     // =========================
     // UPDATE PASSWORD
     // =========================
-=======
-        {
-          status: 400,
-        }
-      );
-    }
-
-    const hashedPassword = await hashPassword(password);
-
->>>>>>> dev
     await prisma.user.update({
       where: {
         id: resetToken.userId,
@@ -112,19 +78,15 @@ export async function POST(req: Request) {
       },
     });
 
-<<<<<<< HEAD
     // =========================
     // HAPUS TOKEN
     // =========================
-=======
->>>>>>> dev
     await prisma.passwordResetToken.delete({
       where: {
         id: resetToken.id,
       },
     });
 
-<<<<<<< HEAD
     return NextResponse.json(
       {
         message: "Password berhasil diubah",
@@ -132,30 +94,13 @@ export async function POST(req: Request) {
       { status: 200 }
     );
   } catch (error) {
-    console.error(
-      "RESET PASSWORD ERROR:",
-      error
-    );
-=======
-    return NextResponse.json({
-      message: "Password berhasil diubah",
-    });
-
-  } catch (error) {
-    console.error(error);
->>>>>>> dev
+    console.error("RESET PASSWORD ERROR:", error);
 
     return NextResponse.json(
       {
         message: "Internal Server Error",
       },
-<<<<<<< HEAD
       { status: 500 }
-=======
-      {
-        status: 500,
-      }
->>>>>>> dev
     );
   }
 }

@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-
 import { prisma } from "@/lib/prisma";
 import { verifyOtpSchema } from "@/lib/validation";
 
@@ -7,6 +6,9 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
+    // =========================
+    // VALIDASI INPUT
+    // =========================
     const parsed = verifyOtpSchema.safeParse(body);
 
     if (!parsed.success) {
@@ -21,7 +23,9 @@ export async function POST(req: Request) {
 
     const { email, otp } = parsed.data;
 
-    // Cari user berdasarkan email
+    // =========================
+    // CARI USER
+    // =========================
     const user = await prisma.user.findUnique({
       where: {
         email,
@@ -37,7 +41,9 @@ export async function POST(req: Request) {
       );
     }
 
-    // Cari OTP sesuai user & kode OTP
+    // =========================
+    // CARI OTP
+    // =========================
     const otpData = await prisma.emailVerificationOtp.findFirst({
       where: {
         userId: user.id,
@@ -54,8 +60,17 @@ export async function POST(req: Request) {
       );
     }
 
-    // Cek masa berlaku
+    // =========================
+    // CEK MASA BERLAKU
+    // =========================
     if (otpData.expiresAt < new Date()) {
+      // Hapus OTP yang sudah expired
+      await prisma.emailVerificationOtp.delete({
+        where: {
+          id: otpData.id,
+        },
+      });
+
       return NextResponse.json(
         {
           message: "OTP sudah kadaluarsa",
@@ -64,7 +79,9 @@ export async function POST(req: Request) {
       );
     }
 
-    // Verifikasi email
+    // =========================
+    // VERIFIKASI USER
+    // =========================
     await prisma.user.update({
       where: {
         id: user.id,
@@ -74,7 +91,9 @@ export async function POST(req: Request) {
       },
     });
 
-    // Hapus OTP yang sudah dipakai
+    // =========================
+    // HAPUS OTP TERPAKAI
+    // =========================
     await prisma.emailVerificationOtp.delete({
       where: {
         id: otpData.id,
@@ -88,15 +107,13 @@ export async function POST(req: Request) {
       { status: 200 }
     );
   } catch (err) {
-    console.error(err);
+    console.error("VERIFY OTP ERROR:", err);
 
     return NextResponse.json(
       {
         message: "Internal Server Error",
       },
-      {
-        status: 500,
-      }
+      { status: 500 }
     );
   }
 }

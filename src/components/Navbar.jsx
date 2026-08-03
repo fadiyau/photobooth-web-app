@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 // Data Navigasi terpusat
 const NAV_LINKS = [
@@ -41,13 +41,37 @@ const NAV_LINKS = [
   }
 ];
 
-function Navbar() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+function Navbar({ user: initialUser, isLoggedIn: initialIsLoggedIn }) {
+  const [user, setUser] = useState(initialUser);
+  const [isLoggedIn, setIsLoggedIn] = useState(initialIsLoggedIn);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   
   const dropdownRef = useRef(null);
   const pathname = usePathname();
+  const router = useRouter();
+
+  // Sinkronisasi state internal dari props jika props berubah dari Server Component (layout.js)
+  useEffect(() => {
+    setUser(initialUser);
+    setIsLoggedIn(initialIsLoggedIn);
+  }, [initialUser, initialIsLoggedIn]);
+
+  // Handle Logout
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoggedIn(false);
+      setUser(null);
+      setIsDropdownOpen(false);
+      setIsMenuOpen(false);
+      router.push('/login');
+      router.refresh();
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -121,19 +145,17 @@ function Navbar() {
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                     className="flex items-center gap-2.5 cursor-pointer py-1.5 px-2.5 rounded-lg hover:bg-gray-50 transition-colors"
                   >
-                    <div className="flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-full bg-slate-100 border border-slate-200 text-slate-500 shrink-0">
-                      <svg className="h-5 w-5 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
+                    <div className="flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-full bg-slate-100 border border-slate-200 text-slate-500 shrink-0 font-bold uppercase text-xs">
+                      {user?.username?.slice(0, 2) || user?.name?.slice(0, 2) || 'US'}
                     </div>
                     <span className="text-sm font-semibold text-slate-800">
-                      Username
+                      {user?.username || user?.name || 'User'}
                     </span>
                   </button>
 
-                  {/* Dropdown Menu - Rata Kiri */}
+                  {/* Dropdown Menu */}
                   {isDropdownOpen && (
-                    <div className="absolute left-0 top-full pt-2 w-48 z-50">
+                    <div className="absolute right-0 top-full pt-2 w-48 z-50">
                       <div className="bg-white border border-gray-200 rounded-xl shadow-lg py-1.5 overflow-hidden">
                         <Link 
                           href="/settings"
@@ -148,7 +170,7 @@ function Navbar() {
                         </Link>
                         <div className="border-t border-gray-100 my-1"></div>
                         <button 
-                          onClick={() => { setIsLoggedIn(false); setIsDropdownOpen(false); }}
+                          onClick={handleLogout}
                           className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-blue-50 transition-colors text-left cursor-pointer"
                         >
                           <svg className="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -167,10 +189,8 @@ function Navbar() {
                   className="block md:hidden cursor-pointer hover:opacity-80 transition-opacity p-1"
                   aria-label="Open Menu"
                 >
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-700">
-                    <line x1="3" y1="12" x2="21" y2="12"></line>
-                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6 7H11C11.2652 7 11.5196 7.10536 11.7071 7.29289C11.8946 7.48043 12 7.73478 12 8C12 8.26522 11.8946 8.51957 11.7071 8.70711C11.5196 8.89464 11.2652 9 11 9H6C5.73478 9 5.48043 8.89464 5.29289 8.70711C5.10536 8.51957 5 8.26522 5 8C5 7.73478 5.10536 7.48043 5.29289 7.29289C5.48043 7.10536 5.73478 7 6 7V7ZM13 15H18C18.2652 15 18.5196 15.1054 18.7071 18.7071C18.8946 15.4804 19 15.7348 19 16C19 16.2652 18.8946 16.5196 18.7071 16.7071C18.5196 16.8946 18.2652 17 18 17H13C12.7348 17 12.4804 16.8946 12.2929 16.7071C12.1054 16.5196 12 16.2652 12 16C12 15.7348 12.1054 15.4804 12.2929 15.2929C12.4804 15.1054 12.7348 15 13 15ZM6 11H18C18.2652 11 18.5196 11.1054 18.7071 11.2929C18.8946 11.4804 19 11.7348 19 12C19 12.2652 18.8946 12.5196 18.7071 12.7071C18.5196 12.8946 18.2652 13 18 13H6C5.73478 13 5.48043 12.8946 5.29289 12.7071C5.10536 12.5196 5 12.2652 5 12C5 11.7348 5.10536 11.4804 5.29289 11.2929C5.48043 11.1054 5.73478 11 6 11Z" fill="#001D6C"/>
                   </svg>
                 </button>
               </div>
@@ -199,10 +219,8 @@ function Navbar() {
                   aria-label="Open Menu"
                 >
                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M6 7H11C11.2652 7 11.5196 7.10536 11.7071 7.29289C11.8946 7.48043 12 7.73478 12 8C12 8.26522 11.8946 8.51957 11.7071 8.70711C11.5196 8.89464 11.2652 9 11 9H6C5.73478 9 5.48043 8.89464 5.29289 8.70711C5.10536 8.51957 5 8.26522 5 8C5 7.73478 5.10536 7.48043 5.29289 7.29289C5.48043 7.10536 5.73478 7 6 7V7ZM13 15H18C18.2652 15 18.5196 15.1054 18.7071 15.2929C18.8946 15.4804 19 15.7348 19 16C19 16.2652 18.8946 16.5196 18.7071 16.7071C18.5196 16.8946 18.2652 17 18 17H13C12.7348 17 12.4804 16.8946 12.2929 16.7071C12.1054 16.5196 12 16.2652 12 16C12 15.7348 12.1054 15.4804 12.2929 15.2929C12.4804 15.1054 12.7348 15 13 15ZM6 11H18C18.2652 11 18.5196 11.1054 18.7071 11.2929C18.8946 11.4804 19 11.7348 19 12C19 12.2652 18.8946 12.5196 18.7071 12.7071C18.5196 12.8946 18.2652 13 18 13H6C5.73478 13 5.48043 12.8946 5.29289 12.7071C5.10536 12.5196 5 12.2652 5 12C5 11.7348 5.10536 11.4804 5.29289 11.2929C5.48043 11.1054 5.73478 11 6 11Z" fill="#001D6C"/>
+                    <path d="M6 7H11C11.2652 7 11.5196 7.10536 11.7071 7.29289C11.8946 7.48043 12 7.73478 12 8C12 8.26522 11.8946 8.51957 11.7071 8.70711C11.5196 8.89464 11.2652 9 11 9H6C5.73478 9 5.48043 8.89464 5.29289 8.70711C5.10536 8.51957 5 8.26522 5 8C5 7.73478 5.10536 7.48043 5.29289 7.29289C5.48043 7.10536 5.73478 7 6 7V7ZM13 15H18C18.2652 15 18.5196 15.1054 18.7071 18.7071C18.8946 15.4804 19 15.7348 19 16C19 16.2652 18.8946 16.5196 18.7071 16.7071C18.5196 16.8946 18.2652 17 18 17H13C12.7348 17 12.4804 16.8946 12.2929 16.7071C12.1054 16.5196 12 16.2652 12 16C12 15.7348 12.1054 15.4804 12.2929 15.2929C12.4804 15.1054 12.7348 15 13 15ZM6 11H18C18.2652 11 18.5196 11.1054 18.7071 11.2929C18.8946 11.4804 19 11.7348 19 12C19 12.2652 18.8946 12.5196 18.7071 12.7071C18.5196 12.8946 18.2652 13 18 13H6C5.73478 13 5.48043 12.8946 5.29289 12.7071C5.10536 12.5196 5 12.2652 5 12C5 11.7348 5.10536 11.4804 5.29289 11.2929C5.48043 11.1054 5.73478 11 6 11Z" fill="#001D6C"/>
                   </svg>
-
-
                 </button>
               </>
             )}
@@ -243,14 +261,12 @@ function Navbar() {
         {/* Mobile Header Profile saat Logged In */}
         {isLoggedIn && (
           <div className="flex items-center gap-3 pb-4 mb-2 border-b border-gray-100">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 border border-slate-200 text-slate-500 shrink-0">
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 border border-slate-200 text-slate-500 shrink-0 font-bold uppercase text-xs">
+              {user?.username?.slice(0, 2) || user?.name?.slice(0, 2) || 'US'}
             </div>
             <div className="flex flex-col min-w-0">
-              <span className="text-sm font-bold text-gray-900 truncate">Username</span>
-              <span className="text-xs text-gray-400 truncate">username@gmail.com</span>
+              <span className="text-sm font-bold text-gray-900 truncate">{user?.username || user?.name || 'User'}</span>
+              <span className="text-xs text-gray-400 truncate">{user?.email || ''}</span>
             </div>
           </div>
         )}
@@ -311,30 +327,13 @@ function Navbar() {
           ) : (
             <button 
               className="w-full py-2.5 text-sm font-semibold text-blue-600 border border-blue-600 rounded-md hover:bg-blue-50 transition-all cursor-pointer"
-              onClick={() => { setIsLoggedIn(false); setIsMenuOpen(false); }}
+              onClick={handleLogout}
             >
               Log Out
             </button>
           )}
         </div>
       </aside>
-
-      {/* DEV MODE TOGGLE BUTTON */}
-      <div className="fixed bottom-4 right-4 z-[9999] bg-slate-900/90 backdrop-blur-md text-white p-2.5 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-3">
-        <span className="text-xs font-mono text-slate-300 pl-1 font-semibold uppercase tracking-wider">
-          Dev Mode:
-        </span>
-        <button
-          onClick={() => setIsLoggedIn(!isLoggedIn)}
-          className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer shadow-sm ${
-            isLoggedIn 
-              ? 'bg-emerald-500 text-white hover:bg-emerald-600' 
-              : 'bg-rose-500 text-white hover:bg-rose-600'
-          }`}
-        >
-          {isLoggedIn ? 'LOGGED IN' : 'LOGGED OUT'}
-        </button>
-      </div>
     </>
   );
 }
