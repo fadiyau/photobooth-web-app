@@ -6,9 +6,10 @@ import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState(''); // Bisa berisi Email atau Username
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isPasswordFocused, setIsPasswordFocused] = useState(false); // State untuk deteksi fokus
   const [rememberMe, setRememberMe] = useState(false);
 
   const [errorMessage, setErrorMessage] = useState('');
@@ -28,7 +29,7 @@ export default function LoginPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email,
+          identifier, // Mengirim identifier (email atau username)
           password,
         }),
       });
@@ -53,7 +54,7 @@ export default function LoginPage() {
       {/* KONTEN UTAMA */}
       <div className="w-full max-w-4xl mx-auto flex flex-col gap-6">
         
-        {/* ================= TOMBOL BACK ================= */}
+        {/* TOMBOL BACK */}
         <div>
           <button
             onClick={() => router.push('/')}
@@ -64,7 +65,7 @@ export default function LoginPage() {
           </button>
         </div>
 
-        {/* ================= GRID 2 KOLOM (Gambar & Form) ================= */}
+        {/* GRID 2 KOLOM */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-center">
           
           {/* KOLOM KIRI: PLACEHOLDER GAMBAR */}
@@ -96,17 +97,17 @@ export default function LoginPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               
-              {/* INPUT EMAIL */}
+              {/* INPUT USERNAME / EMAIL */}
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                  Email
+                  Username or Email
                 </label>
                 <input
-                  type="email"
-                  placeholder="email@example.com"
-                  value={email}
+                  type="text"
+                  placeholder="Enter your username or email"
+                  value={identifier}
                   onChange={(e) => {
-                    setEmail(e.target.value);
+                    setIdentifier(e.target.value);
                     if (errorMessage) setErrorMessage('');
                   }}
                   className="w-full px-3.5 py-2.5 border border-gray-200 rounded-lg bg-gray-50/50 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all placeholder:text-gray-400 text-gray-900"
@@ -124,6 +125,8 @@ export default function LoginPage() {
                     type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
                     value={password}
+                    onFocus={() => setIsPasswordFocused(true)}
+                    onBlur={() => setIsPasswordFocused(false)}
                     onChange={(e) => {
                       setPassword(e.target.value);
                       if (errorMessage) setErrorMessage('');
@@ -139,6 +142,11 @@ export default function LoginPage() {
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
+                {(isPasswordFocused || password.length > 0) && (
+                  <p className="text-[11px] text-gray-400 mt-1 transition-all animate-fadeIn">
+                    It must be a combination of minimum 8 letters, numbers, and symbols.
+                  </p>
+                )}
               </div>
 
               {/* REMEMBER ME & FORGOT PASSWORD */}

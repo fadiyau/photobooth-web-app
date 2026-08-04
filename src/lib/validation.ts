@@ -8,7 +8,7 @@ export const registerSchema = z.object({
 });
 
 export const loginSchema = z.object({
-  email: z.string().email("Format email tidak valid"),
+  identifier: z.string().min(3, "Username atau Email minimal 3 karakter"),
   password: z.string().min(6, "Password minimal 6 karakter"),
 });
 
