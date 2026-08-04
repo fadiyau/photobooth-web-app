@@ -16,35 +16,32 @@ export default function SettingsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
 
-  // 1. FETCH DATA USER SAAT HALAMAN DIMUAT
   useEffect(() => {
-  async function fetchUserProfile() {
-    try {
-      const res = await fetch('/api/auth/me');
-      const data = await res.json();
+    async function fetchUserProfile() {
+      try {
+        const res = await fetch('/api/users/profile');
+        const data = await res.json();
 
-      // Cek res.ok dan pastikan data.id atau data.email ada (karena data tidak dibungkus 'user')
-      if (res.ok && data?.id) {
-        setProfileData({
-          name: data.name || '',
-          username: data.username || '',
-          email: data.email || ''
-        });
-      } else {
+        if (res.ok && data?.user) {
+          setProfileData({
+            name: data.user.name || '',
+            username: data.user.username || '',
+            email: data.user.email || ''
+          });
+        } else {
+          router.push('/login');
+        }
+      } catch (error) {
+        console.error('Failed to fetch user:', error);
         router.push('/login');
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error('Failed to fetch user:', error);
-      router.push('/login');
-    } finally {
-      setIsLoading(false);
     }
-  }
 
-  fetchUserProfile();
-}, [router]);
+    fetchUserProfile();
+  }, [router]);
 
-  // 2. HANDLE INPUT CHANGE
   const handleChange = (e) => {
     const { name, value } = e.target;
     setProfileData(prev => ({
@@ -53,7 +50,6 @@ export default function SettingsPage() {
     }));
   };
 
-  // 3. SUBMIT PERUBAHAN KE API UPDATE PROFILE
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -77,9 +73,8 @@ export default function SettingsPage() {
         throw new Error(data.message || 'Gagal memperbarui profil');
       }
 
-      setMessage({ type: 'success', text: 'Profile updated successfully!' });
+      setMessage({ type: 'success', text: data.message || 'Profile updated successfully!' });
       
-      // Refresh router agar komponen lain (misal Navbar) ikut ter-update
       router.refresh();
 
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
