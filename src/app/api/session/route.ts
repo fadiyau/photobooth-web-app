@@ -1,36 +1,26 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getUserId } from "@/lib/getUser";
-import { generateSessionCode } from "@/utils/generateSessionCode";
-import { createSessionSchema } from "@/lib/session-validation";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
-    // Cek user login
-    const userId = await getUserId();
+    const user = await getCurrentUser();
 
-    if (!userId) {
+    if (!user) {
       return NextResponse.json(
-        {
-          message: "Unauthorized",
-        },
-        {
-          status: 401,
-        }
+        { message: "Unauthorized" },
+        { status: 401 }
       );
     }
 
-    // Ambil body request
     const body = await req.json();
 
-    // Validasi input
-    const parsed = createSessionSchema.safeParse(body);
+    const { frameId } = body;
 
-    if (!parsed.success) {
+    if (!frameId) {
       return NextResponse.json(
         {
-          message: "Input tidak valid",
-          errors: parsed.error.flatten(),
+          message: "Frame wajib dipilih",
         },
         {
           status: 400,
@@ -38,51 +28,48 @@ export async function POST(req: Request) {
       );
     }
 
-    // Generate session code yang unik
-    let code = generateSessionCode();
-
-    while (
-      await prisma.session.findUnique({
-        where: {
-          code,
-        },
-      })
-    ) {
-      code = generateSessionCode();
-    }
-
-    // Buat session
-    const session = await prisma.session.create({
-      data: {
-        code,
-        ownerId: userId,
-        templateId: parsed.data.templateId ?? null,
+    const frame = await prisma.frame.findUnique({
+      where: {
+        id: frameId,
       },
     });
 
-    // Owner otomatis menjadi participant pertama
-    await prisma.participant.create({
+    if (!frame) {
+      return NextResponse.json(
+        {
+          message: "Frame tidak ditemukan",
+        },
+        {
+          status: 404,
+        }
+      );
+    }
+
+    const session = await prisma.session.create({
       data: {
-        sessionId: session.id,
-        userId,
+        userId: user.id,
+        frameId,
+      },
+      include: {
+        frame: true,
       },
     });
 
     return NextResponse.json(
       {
         message: "Session berhasil dibuat",
-        data: session,
+        session,
       },
       {
         status: 201,
       }
     );
   } catch (error) {
-    console.error(error);
+    console.error("CREATE SESSION ERROR:", error);
 
     return NextResponse.json(
       {
-        message: "Terjadi kesalahan pada server",
+        message: "Internal Server Error",
       },
       {
         status: 500,
