@@ -4,6 +4,11 @@ const brevo = new BrevoClient({
   apiKey: process.env.BREVO_API_KEY!,
 });
 
+console.log(
+  "BREVO API KEY:",
+  process.env.BREVO_API_KEY?.slice(0, 12)
+);
+
 // =========================
 // WELCOME EMAIL
 // =========================
