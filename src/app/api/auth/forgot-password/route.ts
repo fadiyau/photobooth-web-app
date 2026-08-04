@@ -37,7 +37,6 @@ export async function POST(req: Request) {
     /*
      * Jangan memberi tahu apakah email
      * terdaftar atau tidak.
-     *
      * Ini mencegah email enumeration.
      */
     if (!user) {
@@ -62,9 +61,12 @@ export async function POST(req: Request) {
     // =========================
     // GENERATE TOKEN BARU
     // =========================
-    const resetToken = crypto
-      .randomBytes(32)
-      .toString("hex");
+    const resetToken = crypto.randomBytes(32).toString("hex");
+
+    // Log token untuk keperluan debugging di lokal (dari dev)
+    if (process.env.NODE_ENV !== "production") {
+      console.log("RESET TOKEN:", resetToken);
+    }
 
     // =========================
     // SIMPAN TOKEN
@@ -73,9 +75,7 @@ export async function POST(req: Request) {
       data: {
         token: resetToken,
         userId: user.id,
-        expiresAt: new Date(
-          Date.now() + 1000 * 60 * 15
-        ),
+        expiresAt: new Date(Date.now() + 1000 * 60 * 15),
       },
     });
 
@@ -124,10 +124,7 @@ export async function POST(req: Request) {
       { status: 200 }
     );
   } catch (error) {
-    console.error(
-      "FORGOT PASSWORD ERROR:",
-      error
-    );
+    console.error("FORGOT PASSWORD ERROR:", error);
 
     return NextResponse.json(
       {

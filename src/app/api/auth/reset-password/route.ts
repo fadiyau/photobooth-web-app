@@ -27,12 +27,11 @@ export async function POST(req: Request) {
     // =========================
     // CARI TOKEN
     // =========================
-    const resetToken =
-      await prisma.passwordResetToken.findUnique({
-        where: {
-          token,
-        },
-      });
+    const resetToken = await prisma.passwordResetToken.findUnique({
+      where: {
+        token,
+      },
+    });
 
     if (!resetToken) {
       return NextResponse.json(
@@ -65,8 +64,7 @@ export async function POST(req: Request) {
     // =========================
     // HASH PASSWORD BARU
     // =========================
-    const hashedPassword =
-      await hashPassword(password);
+    const hashedPassword = await hashPassword(password);
 
     // =========================
     // UPDATE PASSWORD
@@ -96,10 +94,7 @@ export async function POST(req: Request) {
       { status: 200 }
     );
   } catch (error) {
-    console.error(
-      "RESET PASSWORD ERROR:",
-      error
-    );
+    console.error("RESET PASSWORD ERROR:", error);
 
     return NextResponse.json(
       {

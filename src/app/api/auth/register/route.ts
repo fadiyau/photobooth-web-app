@@ -26,22 +26,16 @@ export async function POST(req: Request) {
       );
     }
 
-    const {
-      username,
-      name,
-      email,
-      password,
-    } = parsed.data;
+    const { username, name, email, password } = parsed.data;
 
     // =========================
     // CEK USERNAME
     // =========================
-    const usernameExist =
-      await prisma.user.findUnique({
-        where: {
-          username,
-        },
-      });
+    const usernameExist = await prisma.user.findUnique({
+      where: {
+        username,
+      },
+    });
 
     if (usernameExist) {
       return NextResponse.json(
@@ -55,12 +49,11 @@ export async function POST(req: Request) {
     // =========================
     // CEK EMAIL
     // =========================
-    const emailExist =
-      await prisma.user.findUnique({
-        where: {
-          email,
-        },
-      });
+    const emailExist = await prisma.user.findUnique({
+      where: {
+        email,
+      },
+    });
 
     if (emailExist) {
       return NextResponse.json(
@@ -74,8 +67,7 @@ export async function POST(req: Request) {
     // =========================
     // HASH PASSWORD
     // =========================
-    const hashedPassword =
-      await hashPassword(password);
+    const hashedPassword = await hashPassword(password);
 
     // =========================
     // CREATE USER
@@ -104,9 +96,7 @@ export async function POST(req: Request) {
     // =========================
     // GENERATE OTP
     // =========================
-    const otp = Math.floor(
-      1000 + Math.random() * 9000
-    ).toString();
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
 
     // =========================
     // SIMPAN OTP
@@ -115,9 +105,7 @@ export async function POST(req: Request) {
       data: {
         code: otp,
         userId: user.id,
-        expiresAt: new Date(
-          Date.now() + 1000 * 60 * 5
-        ),
+        expiresAt: new Date(Date.now() + 1000 * 60 * 5),
       },
     });
 
@@ -131,25 +119,16 @@ export async function POST(req: Request) {
         otp
       );
     } catch (emailError) {
-      console.error(
-        "Gagal mengirim OTP:",
-        emailError
-      );
+      console.error("Gagal mengirim OTP:", emailError);
     }
 
     // =========================
     // KIRIM WELCOME EMAIL
     // =========================
     try {
-      await sendWelcomeEmail(
-        user.email,
-        user.name
-      );
+      await sendWelcomeEmail(user.email, user.name);
     } catch (emailError) {
-      console.error(
-        "Gagal mengirim welcome email:",
-        emailError
-      );
+      console.error("Gagal mengirim welcome email:", emailError);
     }
 
     // =========================
@@ -157,8 +136,7 @@ export async function POST(req: Request) {
     // =========================
     return NextResponse.json(
       {
-        message:
-          "Register berhasil. Silakan verifikasi email kamu.",
+        message: "Register berhasil. Silakan verifikasi email kamu.",
         user,
         emailVerified: false,
         requiresVerification: true,
@@ -166,18 +144,13 @@ export async function POST(req: Request) {
       { status: 201 }
     );
   } catch (error) {
-    console.error(
-      "REGISTER ERROR:",
-      error
-    );
+    console.error("REGISTER ERROR:", error);
 
     return NextResponse.json(
       {
         message: "Internal Server Error",
       },
-      {
-        status: 500,
-      }
+      { status: 500 }
     );
   }
 }
