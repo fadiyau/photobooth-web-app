@@ -1,44 +1,39 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { comparePassword } from "@/lib/bcrypt";
-import { loginSchema } from "@/lib/validation";
 import { signToken } from "@/lib/jwt";
+import { loginSchema } from "@/lib/validation"; // 1. Import loginSchema
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-
-    // =========================
-    // VALIDASI INPUT
-    // =========================
     const parsed = loginSchema.safeParse(body);
 
     if (!parsed.success) {
       return NextResponse.json(
-        {
-          message: "Input tidak valid",
-          errors: parsed.error.flatten(),
+        { 
+          message: "Input tidak valid", 
+          errors: parsed.error.flatten().fieldErrors 
         },
         { status: 400 }
       );
     }
 
-    const { email, password } = parsed.data;
+    const { identifier, password } = parsed.data;
 
-    // =========================
-    // CARI USER
-    // =========================
-    const user = await prisma.user.findUnique({
+    //Cari User 
+    const user = await prisma.user.findFirst({
       where: {
-        email,
+        OR: [
+          { email: { equals: identifier, mode: "insensitive" } },
+          { username: { equals: identifier, mode: "insensitive" } },
+        ],
       },
     });
 
     if (!user) {
       return NextResponse.json(
-        {
-          message: "Email atau password salah",
-        },
+        { message: "Username/Email atau password salah" },
         { status: 401 }
       );
     }
@@ -48,9 +43,7 @@ export async function POST(req: Request) {
     // =========================
     if (!user.password) {
       return NextResponse.json(
-        {
-          message: "Silakan login menggunakan Google",
-        },
+        { message: "Silakan login menggunakan Google" },
         { status: 401 }
       );
     }
@@ -71,16 +64,11 @@ export async function POST(req: Request) {
     // =========================
     // CEK PASSWORD
     // =========================
-    const valid = await comparePassword(
-      password,
-      user.password
-    );
+    const valid = await comparePassword(password, user.password);
 
     if (!valid) {
       return NextResponse.json(
-        {
-          message: "Email atau password salah",
-        },
+        { message: "Username/Email atau password salah" },
         { status: 401 }
       );
     }
@@ -95,7 +83,7 @@ export async function POST(req: Request) {
     });
 
     // =========================
-    // RESPONSE
+    // RESPONSE & COOKIE
     // =========================
     const response = NextResponse.json({
       message: "Login berhasil",
@@ -109,9 +97,6 @@ export async function POST(req: Request) {
       },
     });
 
-    // =========================
-    // SET COOKIE
-    // =========================
     response.cookies.set("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -121,16 +106,12 @@ export async function POST(req: Request) {
     });
 
     return response;
+
   } catch (error) {
     console.error("LOGIN ERROR:", error);
-
     return NextResponse.json(
-      {
-        message: "Internal Server Error",
-      },
-      {
-        status: 500,
-      }
+      { message: "Internal Server Error" },
+      { status: 500 }
     );
   }
 }
