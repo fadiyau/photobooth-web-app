@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     if (!parsed.success) {
       return NextResponse.json(
         {
-          message: "Input tidak valid",
+          message: "Invalid Input",
           errors: parsed.error.flatten(),
         },
         { status: 400 }
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     if (!resetToken) {
       return NextResponse.json(
         {
-          message: "Token tidak valid",
+          message: "Invalid token",
         },
         { status: 400 }
       );
@@ -55,7 +55,7 @@ export async function POST(req: Request) {
 
       return NextResponse.json(
         {
-          message: "Token sudah kadaluarsa",
+          message: "Token has expired",
         },
         { status: 400 }
       );
@@ -89,7 +89,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json(
       {
-        message: "Password berhasil diubah",
+        message: "Password successfully changed",
       },
       { status: 200 }
     );

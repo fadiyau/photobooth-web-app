@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     if (!parsed.success) {
       return NextResponse.json(
         {
-          message: "Input tidak valid",
+          message: "Invalid Input",
           errors: parsed.error.flatten(),
         },
         { status: 400 }
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     if (usernameExist) {
       return NextResponse.json(
         {
-          message: "Username sudah digunakan",
+          message: "Username is already taken.",
         },
         { status: 409 }
       );
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
     if (emailExist) {
       return NextResponse.json(
         {
-          message: "Email sudah digunakan",
+          message: "Email is already in use.",
         },
         { status: 409 }
       );
@@ -119,7 +119,7 @@ export async function POST(req: Request) {
         otp
       );
     } catch (emailError) {
-      console.error("Gagal mengirim OTP:", emailError);
+      console.error("Failed to send OTP:", emailError);
     }
 
     // =========================
@@ -128,7 +128,7 @@ export async function POST(req: Request) {
     try {
       await sendWelcomeEmail(user.email, user.name);
     } catch (emailError) {
-      console.error("Gagal mengirim welcome email:", emailError);
+      console.error("Failed to send welcome email:", emailError);
     }
 
     // =========================
@@ -136,7 +136,7 @@ export async function POST(req: Request) {
     // =========================
     return NextResponse.json(
       {
-        message: "Register berhasil. Silakan verifikasi email kamu.",
+        message: "Registration successful. Please verify your email.",
         user,
         emailVerified: false,
         requiresVerification: true,

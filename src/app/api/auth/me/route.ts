@@ -45,7 +45,7 @@ export async function GET() {
     if (!user) {
       return NextResponse.json(
         {
-          message: "User tidak ditemukan",
+          message: "User not found.",
         },
         {
           status: 404,

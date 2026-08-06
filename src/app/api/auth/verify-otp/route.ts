@@ -14,7 +14,7 @@ export async function POST(req: Request) {
     if (!parsed.success) {
       return NextResponse.json(
         {
-          message: "Input tidak valid",
+          message: "Invalid Input",
           errors: parsed.error.flatten(),
         },
         { status: 400 }
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     if (!user) {
       return NextResponse.json(
         {
-          message: "User tidak ditemukan",
+          message: "User not found",
         },
         { status: 404 }
       );
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
     if (!otpData) {
       return NextResponse.json(
         {
-          message: "OTP salah",
+          message: "Invalid OTP",
         },
         { status: 400 }
       );
@@ -73,7 +73,7 @@ export async function POST(req: Request) {
 
       return NextResponse.json(
         {
-          message: "OTP sudah kadaluarsa",
+          message: "OTP has expired",
         },
         { status: 400 }
       );
@@ -102,7 +102,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json(
       {
-        message: "Email berhasil diverifikasi",
+        message: "Email successfully verified",
       },
       { status: 200 }
     );

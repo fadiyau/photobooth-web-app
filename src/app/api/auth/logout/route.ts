@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 export async function POST() {
   const response = NextResponse.json({
-    message: "Logout berhasil",
+    message: "Logout Successful.",
   });
 
   // Pastikan atribut disesuaikan dengan opsi cookie saat login

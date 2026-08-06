@@ -54,7 +54,7 @@ export default async function RootLayout({ children }) {
 
   return (
     <html lang="en">
-      <body className="antialiased">
+      <body className="antialiased no-scrollbar">
         {/* Gunakan NavbarWrapper di sini */}
         <NavbarWrapper user={user} isLoggedIn={isLoggedIn} />
         <main>{children}</main>
