@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     if (!parsed.success) {
       return NextResponse.json(
         {
-          message: "Input tidak valid",
+          message: "Invalid email address.",
           errors: parsed.error.flatten(),
         },
         { status: 400 }
@@ -34,18 +34,12 @@ export async function POST(req: Request) {
       },
     });
 
-    /*
-     * Jangan memberi tahu apakah email
-     * terdaftar atau tidak.
-     * Ini mencegah email enumeration.
-     */
     if (!user) {
       return NextResponse.json(
         {
-          message:
-            "Jika email terdaftar, link reset password telah dikirim.",
+          message: "We couldn't find an account with that email. Please check your spelling or Sign Up.",
         },
-        { status: 200 }
+        { status: 404 }
       );
     }
 
@@ -63,7 +57,6 @@ export async function POST(req: Request) {
     // =========================
     const resetToken = crypto.randomBytes(32).toString("hex");
 
-    // Log token untuk keperluan debugging di lokal (dari dev)
     if (process.env.NODE_ENV !== "production") {
       console.log("RESET TOKEN:", resetToken);
     }
@@ -90,15 +83,10 @@ export async function POST(req: Request) {
       );
     } catch (emailError) {
       console.error(
-        "Gagal mengirim reset password email:",
+        "Failed to send password reset email:",
         emailError
       );
 
-      /*
-       * Hapus token jika email gagal dikirim.
-       * Supaya tidak ada token yang tersimpan
-       * tetapi user tidak pernah menerimanya.
-       */
       await prisma.passwordResetToken.deleteMany({
         where: {
           userId: user.id,
@@ -107,19 +95,18 @@ export async function POST(req: Request) {
 
       return NextResponse.json(
         {
-          message: "Gagal mengirim email reset password",
+          message: "We couldn't send the reset email. Please try again later.",
         },
         { status: 500 }
       );
     }
 
     // =========================
-    // RESPONSE
+    // RESPONSE SUKSES
     // =========================
     return NextResponse.json(
       {
-        message:
-          "Jika email terdaftar, link reset password telah dikirim.",
+        message: "Password reset link has been sent to your email.",
       },
       { status: 200 }
     );
@@ -128,7 +115,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json(
       {
-        message: "Internal Server Error",
+        message: "We couldn't process your request. Please try again later.",
       },
       { status: 500 }
     );

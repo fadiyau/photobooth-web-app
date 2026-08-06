@@ -2,7 +2,7 @@ import React from 'react';
 
 export default function HeroSection() {
   return (
-    <section className="max-w-[1800px] mx-auto px-6 sm:px-12 lg:px-38 min-h-[calc(100vh-80px)] flex items-center justify-center py-6">
+    <section className="max-w-[1800px] mx-auto px-6 sm:px-12 lg:px-38 py-25 sm:py-35 2xl:py-50  min-h-[calc(100vh-80px)] flex items-center justify-center">
       <div className="grid grid-cols-1 md:grid-cols-12 gap-10 lg:gap-16 items-center w-full">
         
         {/* Teks Kiri */}
@@ -16,7 +16,7 @@ export default function HeroSection() {
           </p>
           
           <div className="pt-2">
-            <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl shadow-xs transition-colors cursor-pointer">
+            <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg shadow-xs transition-colors cursor-pointer">
               Try it now!
             </button>
           </div>

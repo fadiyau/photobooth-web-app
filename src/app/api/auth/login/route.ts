@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     if (!parsed.success) {
       return NextResponse.json(
         { 
-          message: "Input tidak valid", 
+          message: "Invalid Input", 
           errors: parsed.error.flatten().fieldErrors 
         },
         { status: 400 }
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
 
     if (!user) {
       return NextResponse.json(
-        { message: "Username/Email atau password salah" },
+        { message: "We couldn't find your account. Please check your username, email and password." },
         { status: 401 }
       );
     }
@@ -43,7 +43,7 @@ export async function POST(req: Request) {
     // =========================
     if (!user.password) {
       return NextResponse.json(
-        { message: "Silakan login menggunakan Google" },
+        { message: "Please log in with Google." },
         { status: 401 }
       );
     }
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
     if (!user.emailVerified) {
       return NextResponse.json(
         {
-          message: "Email belum diverifikasi",
+          message: "Your email address has not been verified.",
           emailVerified: false,
         },
         { status: 403 }
@@ -68,7 +68,7 @@ export async function POST(req: Request) {
 
     if (!valid) {
       return NextResponse.json(
-        { message: "Username/Email atau password salah" },
+        { message: "We couldn't find your account. Please check your username, email and password." },
         { status: 401 }
       );
     }
@@ -86,7 +86,7 @@ export async function POST(req: Request) {
     // RESPONSE & COOKIE
     // =========================
     const response = NextResponse.json({
-      message: "Login berhasil",
+      message: "Login successful",
       user: {
         id: user.id,
         username: user.username,

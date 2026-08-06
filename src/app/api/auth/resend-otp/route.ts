@@ -4,7 +4,7 @@ import { sendOtpVerificationEmail } from "@/lib/email";
 import { z } from "zod";
 
 const resendOtpSchema = z.object({
-  email: z.string().email("Format email tidak valid"),
+  email: z.string().email("Invalid email format"),
 });
 
 const RESEND_COOLDOWN = 60 * 1000; // 60 detik
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     if (!parsed.success) {
       return NextResponse.json(
         {
-          message: "Input tidak valid",
+          message: "Invalid Input",
           errors: parsed.error.flatten(),
         },
         { status: 400 }
@@ -42,7 +42,7 @@ export async function POST(req: Request) {
     if (!user) {
       return NextResponse.json(
         {
-          message: "User tidak ditemukan",
+          message: "User not found.",
         },
         { status: 404 }
       );
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
     if (user.emailVerified) {
       return NextResponse.json(
         {
-          message: "Email sudah diverifikasi",
+          message: "Email is already verified.",
         },
         { status: 400 }
       );
@@ -85,7 +85,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json(
           {
-            message: `Silakan tunggu ${remainingSeconds} detik sebelum meminta OTP baru`,
+            message: `Please wait ${remainingSeconds} seconds before requesting a new OTP`,
             remainingSeconds,
           },
           { status: 429 }
@@ -134,7 +134,7 @@ export async function POST(req: Request) {
     // =========================
     return NextResponse.json(
       {
-        message: "OTP baru berhasil dikirim",
+        message: "New OTP sent successfully",
         cooldown: 60,
       },
       { status: 200 }
@@ -144,7 +144,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json(
       {
-        message: "Gagal mengirim OTP",
+        message: "Failed to send OTP",
       },
       { status: 500 }
     );

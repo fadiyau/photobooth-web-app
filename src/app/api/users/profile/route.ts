@@ -62,7 +62,7 @@ export async function PUT(req: Request) {
     if (!name || !username) {
       return NextResponse.json(
         {
-          message: "Name dan username wajib diisi",
+          message: "Name and username are required fields.",
         },
         {
           status: 400,
@@ -83,7 +83,7 @@ export async function PUT(req: Request) {
     if (existingUser) {
       return NextResponse.json(
         {
-          message: "Username sudah digunakan",
+          message: "Username is already taken.",
         },
         {
           status: 400,

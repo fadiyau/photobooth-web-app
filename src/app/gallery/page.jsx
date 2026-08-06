@@ -99,14 +99,21 @@ export default function GalleryPage() {
                   My Gallery
                 </h1>
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 mt-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 0120 14m-6-6h.01M6 20h12a2 2 0 002-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
+                  <svg 
+                        xmlns="http://w3.org" 
+                        viewBox="0 0 24 24" 
+                        width="24" 
+                        height="24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth="2" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round"
+                      >
+                        <rect x="2.5" y="2.5" width="19" height="19" rx="6" ry="6" />
+                        <circle cx="8" cy="8" r="1.5" />
+                        <path d="M3 18.5 L7.5 14 L12 18.5 L16.5 11.5 L21 16" />
+                      </svg>
                   <span>0 Photos</span>
                 </div>
               </div>
@@ -134,7 +141,7 @@ export default function GalleryPage() {
             <div className="my-auto py-12 flex flex-col items-center justify-center text-center">
               <div className="mb-6 text-gray-900">
                 <svg
-                  className="w-24 h-24 sm:w-28 sm:h-28"
+                  className="w-24 h-26 sm:w-28 sm:h-30"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"

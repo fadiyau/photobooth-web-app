@@ -122,10 +122,10 @@ function Navbar({ user: initialUser, isLoggedIn: initialIsLoggedIn }) {
           <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center justify-center gap-2 lg:gap-4 h-full">
             {NAV_LINKS.map((link) => (
               <Link key={link.href} href={link.href} className={getDesktopNavLinkClass(link.href)}>
-                <div className="w-5 h-5 lg:w-6 lg:h-6 flex items-center justify-center shrink-0">
+                <div className="w-5 h-5 lg:w-5 lg:h-5 2xl:w-6 2xl:h-6 flex items-center justify-center shrink-0">
                   {link.icon}
                 </div>
-                <span>{link.label}</span>
+                <span className="text-sm lg:text-base 2xl:text-lg">{link.label}</span>
               </Link>
             ))}
           </div>
