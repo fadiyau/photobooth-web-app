@@ -14,10 +14,9 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
+    const { frameKey } = body;
 
-    const { frameId } = body;
-
-    if (!frameId) {
+    if (!frameKey) {
       return NextResponse.json(
         {
           message: "Frame wajib dipilih",
@@ -28,30 +27,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const frame = await prisma.frame.findUnique({
-      where: {
-        id: frameId,
-      },
-    });
-
-    if (!frame) {
-      return NextResponse.json(
-        {
-          message: "Frame tidak ditemukan",
-        },
-        {
-          status: 404,
-        }
-      );
-    }
-
     const session = await prisma.session.create({
       data: {
         userId: user.id,
-        frameId,
-      },
-      include: {
-        frame: true,
+        frameKey,
       },
     });
 
