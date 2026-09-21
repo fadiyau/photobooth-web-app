@@ -7,6 +7,7 @@ import PhotoStripCanvas from '@/components/EditComponent/PhotoStripCanvas';
 import FilterSelector from '@/components/EditComponent/FilterSelector';
 import StickerSelector from '@/components/EditComponent/StickerSelector';
 import ActionButtons from '@/components/EditComponent/ActionButtons';
+import LoginRequiredModal from '@/components/LoginRequiredModal';
 import Footer from '@/components/Footer';
 import {
   renderPhotostripCanvas,
@@ -62,10 +63,33 @@ export default function EditPhotoContent() {
   const [stickers, setStickers] = useState([]);
   const [selectedStickerId, setSelectedStickerId] = useState(null);
 
-  // Status & Notification
+  // Status & Auth & Notification
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
+
+  // Check login authentication status on mount
+  useEffect(() => {
+    let isMounted = true;
+    async function checkAuth() {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+          if (isMounted) setIsLoggedIn(true);
+        } else {
+          if (isMounted) setIsLoggedIn(false);
+        }
+      } catch (err) {
+        if (isMounted) setIsLoggedIn(false);
+      }
+    }
+    checkAuth();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Auto-hide toast after 4 seconds
   useEffect(() => {
@@ -103,6 +127,12 @@ export default function EditPhotoContent() {
 
   // Save to Gallery Handler
   const handleSaveToGallery = async () => {
+    // If not logged in, prompt the login required modal
+    if (!isLoggedIn) {
+      setIsLoginModalOpen(true);
+      return;
+    }
+
     try {
       setIsSaving(true);
 
@@ -166,6 +196,15 @@ export default function EditPhotoContent() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
             <span>{toastMessage}</span>
+            {toastMessage.includes('Gallery') && (
+              <Link
+                href="/gallery"
+                className="ml-2 text-blue-400 hover:text-blue-300 underline font-bold inline-flex items-center gap-1"
+              >
+                <span>View Gallery</span>
+                <span>→</span>
+              </Link>
+            )}
           </div>
           <button
             type="button"
@@ -237,6 +276,7 @@ export default function EditPhotoContent() {
 
             {/* Section 3: Action Buttons */}
             <ActionButtons
+              isLoggedIn={isLoggedIn}
               isSaving={isSaving}
               isDownloading={isDownloading}
               onSaveToGallery={handleSaveToGallery}
@@ -245,6 +285,14 @@ export default function EditPhotoContent() {
           </div>
         </div>
       </main>
+
+      {/* Login Required Modal */}
+      <LoginRequiredModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        title="Log In to Save"
+        description="Please log in to save your photostrips to your personal gallery and view them anytime."
+      />
 
       {/* Footer */}
       <Footer />

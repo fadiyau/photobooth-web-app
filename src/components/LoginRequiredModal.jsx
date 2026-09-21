@@ -3,7 +3,12 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function LoginRequiredModal({ isOpen, onClose }) {
+export default function LoginRequiredModal({ 
+  isOpen, 
+  onClose,
+  title = "Log In to Continue",
+  description = "You have used your free sessions. Please log in to continue."
+}) {
   const router = useRouter();
 
   if (!isOpen) return null;
@@ -53,10 +58,10 @@ export default function LoginRequiredModal({ isOpen, onClose }) {
 
         {/* Judul & Deskripsi Keterangan */}
         <h3 className="text-2xl font-extrabold text-gray-900 tracking-tight mb-2">
-          Log In to Continue
+          {title}
         </h3>
         <p className="text-sm font-medium text-gray-600 leading-relaxed mb-6">
-          You have used your 3 free sessions. Please log in to continue.
+          {description}
         </p>
 
         {/* Grid Tombol Cancel & Log In */}
