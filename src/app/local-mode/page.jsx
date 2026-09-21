@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { saveLiveClips, clearLiveClips } from '@/utils/livePhotoStorage';
 
 export default function LocalModePage() {
   const router = useRouter();
@@ -13,7 +14,7 @@ export default function LocalModePage() {
   const [facingMode, setFacingMode] = useState('user'); // 'user' (depan) atau 'environment' (belakang)
   const [isFlashOn, setIsFlashOn] = useState(false); 
   const [isFlashTriggered, setIsFlashTriggered] = useState(false); 
-  const [isLive, setIsLive] = useState(false);
+  const [isLive, setIsLive] = useState(true); // Default ON for live photo recording
   const [cameraStream, setCameraStream] = useState(null);
   const [isCapturingSeries, setIsCapturingSeries] = useState(false); 
 
@@ -26,6 +27,9 @@ export default function LocalModePage() {
   const canvasRef = useRef(null);
   const photosRef = useRef(photos);
   const timerTimeoutRef = useRef(null); 
+  const liveClipsRef = useRef([null, null, null, null, null, null]);
+  const activeRecorderRef = useRef(null);
+  const activeChunksRef = useRef([]); 
 
   useEffect(() => {
     photosRef.current = photos;
@@ -102,15 +106,67 @@ export default function LocalModePage() {
   const handleResetPhotos = () => {
     if (window.confirm("Apakah kamu yakin ingin mengulang semua foto dari awal?")) {
       if (timerTimeoutRef.current) clearTimeout(timerTimeoutRef.current);
+      if (activeRecorderRef.current && activeRecorderRef.current.state === 'recording') {
+        try { activeRecorderRef.current.stop(); } catch (e) {}
+      }
       setPhotos([null, null, null, null, null, null]);
+      liveClipsRef.current = [null, null, null, null, null, null];
+      clearLiveClips();
       setIsCapturingSeries(false);
       setCountdown(null);
+    }
+  };
+
+  // --- LIVE VIDEO RECORDING HELPERS ---
+  const startLiveRecording = () => {
+    if (!cameraStream || !isLive) return;
+    try {
+      if (activeRecorderRef.current && activeRecorderRef.current.state === 'recording') {
+        activeRecorderRef.current.stop();
+      }
+      activeChunksRef.current = [];
+      const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+        ? 'video/webm;codecs=vp9'
+        : MediaRecorder.isTypeSupported('video/webm')
+        ? 'video/webm'
+        : 'video/mp4';
+
+      const recorder = new MediaRecorder(cameraStream, {
+        mimeType,
+        videoBitsPerSecond: 2_500_000,
+      });
+
+      recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) {
+          activeChunksRef.current.push(e.data);
+        }
+      };
+
+      activeRecorderRef.current = recorder;
+      recorder.start(100);
+    } catch (err) {
+      console.warn('Could not start live recording:', err);
+    }
+  };
+
+  const stopLiveRecording = (slotIndex) => {
+    if (activeRecorderRef.current && activeRecorderRef.current.state === 'recording') {
+      const recorder = activeRecorderRef.current;
+      recorder.onstop = () => {
+        const mimeType = recorder.mimeType || 'video/webm';
+        const blob = new Blob(activeChunksRef.current, { type: mimeType });
+        liveClipsRef.current[slotIndex] = blob;
+      };
+      recorder.stop();
     }
   };
 
   const capturePhoto = () => {
     const nextEmptyIndex = photosRef.current.findIndex(p => p === null);
     if (nextEmptyIndex === -1) return false;
+
+    // Stop live recording for this photo slot
+    stopLiveRecording(nextEmptyIndex);
 
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current;
@@ -152,6 +208,13 @@ export default function LocalModePage() {
       return;
     }
 
+    const startSeconds = getTimerSeconds() > 0 ? getTimerSeconds() : 1;
+
+    // Start live video recording right as countdown initiates for this photo
+    if (currentSeconds === startSeconds) {
+      startLiveRecording();
+    }
+
     if (currentSeconds > 0) {
       setCountdown(currentSeconds);
       timerTimeoutRef.current = setTimeout(() => {
@@ -191,16 +254,19 @@ export default function LocalModePage() {
     const updatedPhotos = [...photos];
     updatedPhotos[index] = null;
     setPhotos(updatedPhotos);
+    liveClipsRef.current[index] = null;
   };
 
-  const handleContinueToEdit = () => {
+  const handleContinueToEdit = async () => {
     if (!isPhotosComplete || isCapturingSeries) return;
     try {
       if (typeof window !== 'undefined') {
         sessionStorage.setItem('photobooth_photos', JSON.stringify(photos));
       }
+      // Save recorded live video clips to IndexedDB
+      await saveLiveClips(liveClipsRef.current);
     } catch (err) {
-      console.error('Gagal menyimpan foto ke sessionStorage:', err);
+      console.error('Gagal menyimpan foto/live clips ke storage:', err);
     }
     router.push('/edit-photo');
   };
