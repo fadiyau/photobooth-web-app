@@ -19,18 +19,21 @@ model Photo {
 }
 
 model Session {
-  id         String        @id @default(cuid())
-  userId     String
-  frameId String
-  status     SessionStatus @default(CREATED)
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
-  photos     Photo[]
-  frame  Frame @relation(fields: [frameId], references: [id], onDelete: Cascade)
-  user   User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String @id @default(cuid())
+  userId    String
+
+  frameKey  String?
+
+  status    SessionStatus @default(CREATED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  photos Photo[]
+
+  user User @relation(fields:[userId], references:[id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([frameId])
 }
 
 model User {
@@ -90,16 +93,4 @@ enum SessionStatus {
   CAPTURING
   GENERATING
   FINISHED
-}
-
-model Frame {
-  id        String   @id @default(cuid())
-  name      String
-  thumbnail String
-  image     String
-
-  sessions  Session[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
