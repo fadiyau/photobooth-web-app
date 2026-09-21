@@ -16,6 +16,7 @@
     "jsonwebtoken": "^9.0.3",
     "konva": "^10.3.0",
     "lucide-react": "^1.28.0",
+    "mp4-muxer": "^5.2.2",
     "next": "16.2.11",
     "pg": "^8.22.0",
     "prisma": "^6.16.3",

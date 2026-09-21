@@ -14,6 +14,8 @@ import {
   downloadDataUrl,
   saveToLocalGallery,
 } from '@/utils/canvasExport';
+import { getLiveClips } from '@/utils/livePhotoStorage';
+import { exportLivePhotoMP4 } from '@/utils/livePhotoExport';
 
 // Sample fallback portraits for direct page testing / preview
 const SAMPLE_PHOTOS = [
@@ -153,11 +155,37 @@ export default function EditPhotoContent() {
     }
   };
 
-  // Download Handler (PNG or JPEG)
+  // Download Handler (PNG, JPEG, or MP4 Live Photo)
   const handleDownload = async (format = 'image/png') => {
     try {
       setIsDownloading(true);
 
+      // --- LIVE PHOTO MP4 EXPORT ---
+      if (format === 'video/mp4') {
+        setToastMessage('Preparing Live Photo MP4... 🎬');
+
+        const liveClips = await getLiveClips();
+        const filename = `photobooth-live-${Date.now()}.mp4`;
+
+        const mp4Blob = await exportLivePhotoMP4({
+          photos,
+          filterId: selectedFilter,
+          stickers,
+          liveClips,
+          onProgress: (percent, msg) => {
+            setToastMessage(`${msg || 'Exporting Live Photo...'} (${percent}%) 🎬`);
+          },
+        });
+
+        const videoUrl = URL.createObjectURL(mp4Blob);
+        downloadDataUrl(videoUrl, filename);
+        setTimeout(() => URL.revokeObjectURL(videoUrl), 10000);
+
+        setToastMessage('Live Photo MP4 downloaded successfully! 🎬📸🎉');
+        return;
+      }
+
+      // --- STATIC IMAGE EXPORT (PNG / JPEG) ---
       const isJpeg = format === 'image/jpeg';
       const extension = isJpeg ? 'jpg' : 'png';
       const filename = `photobooth-${Date.now()}.${extension}`;
