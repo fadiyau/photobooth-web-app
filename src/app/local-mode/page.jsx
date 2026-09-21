@@ -193,6 +193,18 @@ export default function LocalModePage() {
     setPhotos(updatedPhotos);
   };
 
+  const handleContinueToEdit = () => {
+    if (!isPhotosComplete || isCapturingSeries) return;
+    try {
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('photobooth_photos', JSON.stringify(photos));
+      }
+    } catch (err) {
+      console.error('Gagal menyimpan foto ke sessionStorage:', err);
+    }
+    router.push('/edit-photo');
+  };
+
   return (
     <div className="w-full min-h-screen bg-white pt-20 md:pt-24 pb-12 px-4 md:px-8 flex items-center justify-center select-none">
       
@@ -422,7 +434,7 @@ export default function LocalModePage() {
 
             <button 
               type="button"
-              onClick={() => router.push('/edit-photo')}
+              onClick={handleContinueToEdit}
               disabled={!isPhotosComplete || isCapturingSeries}
               className={`w-full font-bold py-2.5 rounded-xl text-xs block text-center tracking-wide transition-all ${
                 !isPhotosComplete || isCapturingSeries
