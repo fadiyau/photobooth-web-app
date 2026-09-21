@@ -4,6 +4,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 
 export default function ActionButtons({
+  isLoggedIn = false,
   isSaving = false,
   isDownloading = false,
   onSaveToGallery,
@@ -26,16 +27,23 @@ export default function ActionButtons({
 
   return (
     <div className="flex flex-col sm:flex-row items-stretch gap-2.5 sm:gap-3 pt-1">
-      {/* 1. Save to My Gallery Button (Outline Blue with Icon) */}
+      {/* 1. Save to My Gallery Button (Locked if !isLoggedIn, Outline Blue if logged in) */}
       <button
         type="button"
         onClick={onSaveToGallery}
         disabled={isSaving || isDownloading}
-        className={`flex-1 py-2.5 sm:py-3 px-4 rounded-xl sm:rounded-2xl border-2 border-blue-600 font-bold text-xs sm:text-sm tracking-wide flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs active:scale-98 ${
+        className={`flex-1 py-2.5 sm:py-3 px-3.5 sm:px-4 rounded-xl sm:rounded-2xl border-2 font-bold text-xs sm:text-sm tracking-wide flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs active:scale-98 ${
           isSaving
             ? 'bg-blue-50 text-blue-400 border-blue-300 cursor-not-allowed'
-            : 'bg-white text-blue-600 hover:bg-blue-50/80 hover:shadow-md'
+            : !isLoggedIn
+            ? 'bg-gray-50/90 text-gray-700 border-gray-300 hover:bg-gray-100 hover:border-gray-400 hover:text-gray-900'
+            : 'bg-white text-blue-600 border-blue-600 hover:bg-blue-50/80 hover:shadow-md'
         }`}
+        title={
+          !isLoggedIn
+            ? 'Log in required to save photostrips to your gallery'
+            : 'Save photostrip to My Gallery'
+        }
       >
         {isSaving ? (
           <>
@@ -59,6 +67,25 @@ export default function ActionButtons({
               />
             </svg>
             <span>Saving...</span>
+          </>
+        ) : !isLoggedIn ? (
+          <>
+            <svg
+              className="w-4 h-4 text-gray-500 shrink-0"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            <span className="truncate">Save to My Gallery</span>
+            <span className="shrink-0 text-[10px] uppercase font-bold tracking-wider bg-gray-200/90 text-gray-600 px-1.5 py-0.5 rounded-md">
+              Locked
+            </span>
           </>
         ) : (
           <>
