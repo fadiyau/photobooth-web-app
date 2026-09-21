@@ -29,10 +29,29 @@ export default function GalleryPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
 
-  const [photos, setPhotos] = useState([
-    { id: 1, title: 'Frame 1', date: 'July 13, 2026, 11:11 PM.', imageUrl: '' },
-    { id: 2, title: 'Frame 4', date: 'July 13, 2026, 11:11 PM.', imageUrl: '' },
-  ]);
+  const [photos, setPhotos] = useState(() => {
+    const defaultPhotos = [
+      { id: 1, title: 'Frame 1', date: 'July 13, 2026, 11:11 PM.', imageUrl: '' },
+      { id: 2, title: 'Frame 4', date: 'July 13, 2026, 11:11 PM.', imageUrl: '' },
+    ];
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('photobooth_gallery');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return [
+              ...parsed,
+              ...defaultPhotos.filter((p) => !parsed.some((sp) => sp.id === p.id)),
+            ];
+          }
+        }
+      } catch (e) {
+        console.warn('Could not read photobooth_gallery:', e);
+      }
+    }
+    return defaultPhotos;
+  });
 
   // Efek untuk mengecek status login saat komponen pertama kali dirender
   useEffect(() => {
